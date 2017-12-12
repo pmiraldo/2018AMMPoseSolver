@@ -40,12 +40,15 @@ IF(BUILD_POSITION_INDEPENDENT_CODE)
 ENDIF()
 
 ADD_DEFINITIONS (
--Wall
--Wextra
+#-Wall
+-g
+-w
+-Wfatal-errors
+#-Wextra
 #-Werror
--Wwrite-strings
--Wno-unused-parameter
--fno-strict-aliasing
+#-Wwrite-strings
+#-Wno-unused-parameter
+#-fno-strict-aliasing
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/modules/")
