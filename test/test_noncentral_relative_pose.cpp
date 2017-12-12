@@ -144,7 +144,7 @@ int main( int argc, char** argv )
   gettimeofday( &toc, 0 );
   double seventeenpt_time_all =
       TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-
+  
   std::cout << "setting perturbed pose and ";
   std::cout << "performing nonlinear optimization" << std::endl;
   translation_t t_perturbed; rotation_t R_perturbed;
@@ -196,4 +196,8 @@ int main( int argc, char** argv )
   std::cout << seventeenpt_time_all << std::endl;
   std::cout << "timings from nonlinear algorithm: ";
   std::cout << nonlinear_time << std::endl;
+  std::cout << "AMM" << std::endl;
+  double tol = 1e-9;
+  rotation_t initial_state = MatrixXd::Identity(3,3);
+  relative_pose::amm(adapter, tol, initial_state);
 }

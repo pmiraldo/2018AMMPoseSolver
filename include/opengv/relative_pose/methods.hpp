@@ -501,7 +501,20 @@ transformation_t optimize_nonlinear(
     RelativeAdapterBase & adapter,
     const std::vector<int> & indices );
 
+  void amm(const RelativeAdapterBase& adapter, double &tol, const rotation_t & initial_state);
+  double objective_function(const Eigen::MatrixXd & M, const rotation_t & rotation, const translation_t & translation);
+  Eigen::Matrix3d gradient_function(const Eigen::MatrixXd & M, const rotation_t & rotation,
+				    const translation_t & translation);
+  Eigen::Matrix3d exp_R( Eigen::Matrix3d & X );
+  rotation_t rotation_solver(rotation_t & state_rotation, const  translation_t &translation,
+                             const Eigen::MatrixXd & M  , double tol);
+
+
+
 }
 }
 
+
+
+			 
 #endif /* OPENGV_RELATIVE_POSE_METHODS_HPP_ */
