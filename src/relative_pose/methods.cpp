@@ -1309,13 +1309,12 @@ namespace relative_pose
     Eigen::Matrix3d P  = Eigen::Matrix3d::Zero(3,3);
     Eigen::Matrix3d Q  = Eigen::Matrix3d::Zero(3,3);
     Eigen::Matrix3d Qt = Eigen::Matrix3d::Zero(3,3);
+    Eigen::Matrix3d reference = Eigen::Matrix3d
     std::cout << "Inside rotation solver to check the values: " << std::endl;
     std::cout << "Before process starts the rotation matrix is: " << X << std::endl;
     while( erro > tol && k < 1e5 )
     {
-      if(k == 1){
-	break;
-      }
+
       std::cout << "state at the beginning: " << std::endl << X << std::endl << std::endl; 
       DX  = gradient_function(  M, X,  translation );
       std::cout << "Calculated gradient: " << std::endl << DX << std::endl << std::endl;
@@ -1336,18 +1335,22 @@ namespace relative_pose
       
       while( ( objective_function( M, X, translation ) - objective_function(M, Qt, translation ) ) >= g*zz  )
 	{
-
 	  g   = 2*g;
-	  std::cout << "g: " << g << std::endl;
-	  P   = Q;
-	  std::cout << std::endl << "New P: " << std::endl << P << std::endl; 
-	  Q   = P*P; // this seems strange
-	  std::cout << std::endl << "New Q: " << std::endl << Q << std::endl;
-	  Qt  = Q*X;
-	  std::cout << std::endl << "New Qt: " << std::endl << Qt << std::endl;
-	  std::cout << "Current value for obj function: " << objective_function(M, X, translation) << std::endl;
-	  std::cout << "Current value for new obj function: " << objective_function(M, Qt, translation ) << std::endl; 
-
+	  //In order to prevent NAN's the following restriction is added
+	  if(g < 2000){
+	    std::cout << "g: " << g << std::endl;
+	    P   = Q;
+	    std::cout << std::endl << "New P: " << std::endl << P << std::endl; 
+	    Q   = P*P; // this seems strange
+	    std::cout << std::endl << "New Q: " << std::endl << Q << std::endl;
+	    Qt  = Q*X;
+	    std::cout << std::endl << "New Qt: " << std::endl << Qt << std::endl;
+	    std::cout << "Current value for obj function: " << objective_function(M, X, translation) << std::endl;
+	    std::cout << "Current value for new obj function: " << objective_function(M, Qt, translation ) << std::endl; 
+	  }
+	  else{
+	    break;
+	  }
 	}
       std::cout << "End of 1st cycle" << std::endl; 
       std::cout << "******************************************************************" << std::endl;
@@ -1366,6 +1369,10 @@ namespace relative_pose
 	  Pt = -g*Z;
 	  std::cout << "New Pt: " << std::endl << Pt << std::endl << std::endl; 
 	  P  = exp_R( Pt );
+	  //In order to prevent NAN's
+	  if( (P - reference).norm() < 1e-6){
+	    break;
+	  }
 	  std::cout << "New P : " << std::endl << P << std::endl << std::endl;
 	  Qt = P*X;
 	  std::cout << "New Qt: " << std::endl << std::endl << Qt << std::endl;
