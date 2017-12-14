@@ -41,6 +41,7 @@
 #include <opengv/relative_pose/modules/main.hpp>
 #include <opengv/triangulation/methods.hpp>
 
+#include <cmath>
 #include <iostream>
 
 opengv::translation_t
@@ -1309,7 +1310,7 @@ namespace relative_pose
     Eigen::Matrix3d P  = Eigen::Matrix3d::Zero(3,3);
     Eigen::Matrix3d Q  = Eigen::Matrix3d::Zero(3,3);
     Eigen::Matrix3d Qt = Eigen::Matrix3d::Zero(3,3);
-    Eigen::Matrix3d reference = Eigen::Matrix3d
+    Eigen::Matrix3d reference = Eigen::Matrix3d::Identity(3,3);
     std::cout << "Inside rotation solver to check the values: " << std::endl;
     std::cout << "Before process starts the rotation matrix is: " << X << std::endl;
     while( erro > tol && k < 1e5 )
@@ -1389,6 +1390,85 @@ namespace relative_pose
     }
     return X;
   }
+
+  translation_t gradient_translation(const Eigen::MatrixXd & M, const rotation_t & rotation, const translation_t & translation)
+{
+  Eigen::MatrixXd v = Eigen::MatrixXd::Zero(18,1);
+
+  v(0,0)  = translation(1,0) * rotation(2,0) - translation(2,0) * rotation(1,0);
+  v(1,0)  = translation(2,0) * rotation(0,0) - translation(0,0) * rotation(2,0);
+  v(2,0)  = translation(0,0) * rotation(1,0) - translation(1,0) * rotation(0,0);
+  v(3,0)  = translation(1,0) * rotation(2,1) - translation(2,0) * rotation(1,1);
+  v(4,0)  = translation(2,0) * rotation(0,1) - translation(0,0) * rotation(2,1);
+  v(5,0)  = translation(0,0) * rotation(1,1) - translation(1,0) * rotation(0,1);
+  v(6,0)  = translation(1,0) * rotation(2,2) - translation(2,0) * rotation(1,2);
+  v(7,0)  = translation(2,0) * rotation(0,2) - translation(0,0) * rotation(2,2);
+  v(8,0)  = translation(0,0) * rotation(1,2) - translation(1,0) * rotation(0,2);
+  
+  
+  v(9,0)  = rotation(0,0);
+  v(10,0) = rotation(1,0);
+  v(11,0) = rotation(2,0);
+  v(12,0) = rotation(0,1);
+  v(13,0) = rotation(1,1);
+  v(14,0) = rotation(2,1);
+  v(15,0) = rotation(0,2);
+  v(16,0) = rotation(1,2);
+  v(17,0) = rotation(2,2);
+  int n_cols = M.cols();
+  int n_rows = M.rows();
+  
+  Eigen::MatrixXd ei = Eigen::MatrixXd::Zero(1,1);
+  translation_t grad = Eigen::Vector3d::Zero(3,1);
+  translation_t grad_iter = Eigen::Vector3d::Zero(3,1);
+  for(int i = 0; i < n_rows; ++i){
+    ei = M.block(i,0,1,n_cols) * v;
+    grad_iter(0,0) = M(i,2) * rotation(1,0) - M(i,1) * rotation(2,0) +
+                     M(i,5) * rotation(1,1) - M(i,4) * rotation(2,1) +
+                     M(i,8) * rotation(1,2) - M(i,7) * rotation(2,2);
+ 
+    grad_iter(1,0) = M(i,0) * rotation(2,0) - M(i,2) * rotation(0,0) +
+                     M(i,3) * rotation(2,1) - M(i,5) * rotation(0,1) +
+                     M(i,6) * rotation(2,2) - M(i,8) * rotation(0,2);
+
+    grad_iter(2,0) = M(i,1) * rotation(0,0) - M(i,0) * rotation(1,0) +
+                     M(i,4) * rotation(0,1) - M(i,3) * rotation(1,1) +
+                     M(i,7) * rotation(0,2) - M(i,6) * rotation(1,2);
+
+    grad = grad + (2 * ei(0,0) * grad_iter);
+  }
+  return grad;
+}
+
+translation_t translation_solver(const Eigen::MatrixXd & M, const rotation_t & rotation,
+				 const translation_t & translation, double tol){
+  double alpha = 0.1;
+  double error = 1;
+  int k = 0;
+  int iterations = 10;
+  translation_t state = translation;
+  translation_t grad = Eigen::Vector3d::Zero(3,1);
+  translation_t new_state = state - alpha * grad; 
+  while (error > tol && k < iterations){
+    grad = gradient_translation(M, rotation, state);
+    new_state = state - alpha * grad; 
+    double f_obj_current = objective_function(M, rotation, state);
+    double f_obj_next = objective_function(M, rotation, new_state);
+    /*std::cout << "current state: " << std::endl     << state      << std::endl;
+    std::cout << "new state: "     << std::endl     << new_state  << std::endl;
+    std::cout << "f(state): "      << f_obj_current << std::endl;
+    std::cout << "f(new_state): "  << f_obj_next    << std::endl;
+    std::cout << "gradient:     "  << std::endl     << grad          << std::endl;
+    std::cout << std::endl         << std::endl     << std::endl;*/
+    if(f_obj_next > f_obj_current){
+      break;
+    }
+    error = std::abs(f_obj_current - f_obj_next);
+    state = new_state; 
+    k++;
+  }
+  return state;
+}
   
 void amm(const RelativeAdapterBase & adapter, double & tol, const rotation_t & initial_state )
 {
@@ -1469,7 +1549,7 @@ void amm(const RelativeAdapterBase & adapter, double & tol, const rotation_t & i
     previous_state = state;
     //minimize rotation state = min(state, translation, M);
     //minimize translation = min(state, translation, M);
-    double val = objective_function(M, state, translation);
+    /*double val = objective_function(M, state, translation);
     Eigen::Matrix3d grad = gradient_function(M, state, translation);
     double tol = 1e-9;
     state = rotation_solver(state, translation, M, tol);
@@ -1480,7 +1560,11 @@ void amm(const RelativeAdapterBase & adapter, double & tol, const rotation_t & i
     std::cout << "rotation: "    << std::endl << state << std::endl;
     std::cout << "translation: " << std::endl << translation << std::endl;
     error = (state - previous_state).squaredNorm();
-    std::cout << "Error: " << error << " " << iteration << std::endl; 
+    std::cout << "Error: " << error << " " << iteration << std::endl;*/
+    //translation_t test = gradient_translation(M, state, translation);
+    std::cout << "Iteration : " << iteration << std::endl;
+    translation_t test = translation_solver(M, state, translation, 1e-6);
+    std::cout << std::endl << "Test value: " << std::endl << test << std::endl;
     iteration++;
   }
 }
