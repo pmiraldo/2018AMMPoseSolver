@@ -1311,54 +1311,53 @@ namespace relative_pose
     Eigen::Matrix3d Q  = Eigen::Matrix3d::Zero(3,3);
     Eigen::Matrix3d Qt = Eigen::Matrix3d::Zero(3,3);
     Eigen::Matrix3d reference = Eigen::Matrix3d::Identity(3,3);
-    std::cout << "Inside rotation solver to check the values: " << std::endl;
-    std::cout << "Before process starts the rotation matrix is: " << X << std::endl;
+    //std::cout << "Inside rotation solver to check the values: " << std::endl;
+    //std::cout << "Before process starts the rotation matrix is: " << X << std::endl;
     while( erro > tol && k < 1e5 )
     {
 
-      std::cout << "state at the beginning: " << std::endl << X << std::endl << std::endl; 
+      //std::cout << "state at the beginning: " << std::endl << X << std::endl << std::endl; 
       DX  = gradient_function(  M, X,  translation );
-      std::cout << "Calculated gradient: " << std::endl << DX << std::endl << std::endl;
+      //std::cout << "Calculated gradient: " << std::endl << DX << std::endl << std::endl;
       Z   = DX*X.transpose() - X*DX.transpose();
-      std::cout << "Calculated riemaniann gradient: " << std::endl << Z << std::endl << std::endl;
+      //std::cout << "Calculated riemaniann gradient: " << std::endl << Z << std::endl << std::endl;
       zz  = 0.5*( Z*Z.transpose() ).trace();
-      std::cout << "Coefficient zz : " << zz << std::endl << std::endl; 
+      //std::cout << "Coefficient zz : " << zz << std::endl << std::endl; 
       Pt  = -g*Z;
-      std::cout << "Matrix Pt: " << std::endl << Pt << std::endl << std::endl;
+      //std::cout << "Matrix Pt: " << std::endl << Pt << std::endl << std::endl;
       P   = exp_R( Pt );
-      std::cout << "The rotation matrix P: " << std::endl << P << std::endl << std::endl;
+      //std::cout << "The rotation matrix P: " << std::endl << P << std::endl << std::endl;
       Q   = P*P; // this seems strange
-      std::cout << "Matrix Q: " << std::endl << Q << std::endl << std::endl; 
+      // std::cout << "Matrix Q: " << std::endl << Q << std::endl << std::endl; 
       Qt  = Q*X;
-      std::cout << "Matrix Qt: " << std::endl << Qt << std::endl << std::endl;
-      std::cout << "************************************************************" << std::endl << std::endl;
-      std::cout << "1st CYCLE" << std::endl << std::endl;
+      //std::cout << "Matrix Qt: " << std::endl << Qt << std::endl << std::endl;
+      //std::cout << "************************************************************" << std::endl << std::endl;
+      //std::cout << "1st CYCLE" << std::endl << std::endl;
       
       while( ( objective_function( M, X, translation ) - objective_function(M, Qt, translation ) ) >= g*zz  )
 	{
 	  g   = 2*g;
 	  //In order to prevent NAN's the following restriction is added
-	  if(g < 2000){
-	    std::cout << "g: " << g << std::endl;
+	  if(g < 64){
+	    //std::cout << "g: " << g << std::endl;
 	    P   = Q;
-	    std::cout << std::endl << "New P: " << std::endl << P << std::endl; 
+	    //std::cout << std::endl << "New P: " << std::endl << P << std::endl; 
 	    Q   = P*P; // this seems strange
-	    std::cout << std::endl << "New Q: " << std::endl << Q << std::endl;
+	    //std::cout << std::endl << "New Q: " << std::endl << Q << std::endl;
 	    Qt  = Q*X;
-	    std::cout << std::endl << "New Qt: " << std::endl << Qt << std::endl;
-	    std::cout << "Current value for obj function: " << objective_function(M, X, translation) << std::endl;
-	    std::cout << "Current value for new obj function: " << objective_function(M, Qt, translation ) << std::endl; 
+	    //std::cout << std::endl << "New Qt: " << std::endl << Qt << std::endl;
+	    //std::cout << "Current value for obj function: " << objective_function(M, X, translation) << std::endl;
+	    //std::cout << "Current value for new obj function: " << objective_function(M, Qt, translation ) << std::endl; 
 	  }
 	  else{
 	    break;
 	  }
 	}
-      std::cout << "End of 1st cycle" << std::endl; 
-      std::cout << "******************************************************************" << std::endl;
-      Qt = P*X;
-      std::cout << std::endl << "New Qt value: " << std::endl << Qt << std::endl << std::endl;
-      std::cout << "**********************************************************************" << std::endl;
-      std::cout << "Enters 2nd cycle: " << std::endl;
+      //std::cout << "End of 1st cycle" << std::endl; 
+      //std::cout << "******************************************************************" << std::endl;
+      //std::cout << "**********************************************************************" << std::endl;
+      //std::cout << "Enters 2nd cycle: " << std::endl;
+      Qt = P * X; 
       while( ( objective_function( M, X, translation ) - objective_function(M, Qt, translation ) ) < 0.5*g*zz)
 	{
 	  
@@ -1366,17 +1365,17 @@ namespace relative_pose
 	  //     break;
 
 	  g  = 0.5*g;
-	  std::cout << "New g: " << std::endl << g << std::endl << std::endl; 
+	  //std::cout << "New g: " << std::endl << g << std::endl << std::endl; 
 	  Pt = -g*Z;
-	  std::cout << "New Pt: " << std::endl << Pt << std::endl << std::endl; 
+	  //std::cout << "New Pt: " << std::endl << Pt << std::endl << std::endl; 
 	  P  = exp_R( Pt );
 	  //In order to prevent NAN's
 	  if( (P - reference).norm() < 1e-6){
 	    break;
 	  }
-	  std::cout << "New P : " << std::endl << P << std::endl << std::endl;
+	  //std::cout << "New P : " << std::endl << P << std::endl << std::endl;
 	  Qt = P*X;
-	  std::cout << "New Qt: " << std::endl << std::endl << Qt << std::endl;
+	  //std::cout << "New Qt: " << std::endl << std::endl << Qt << std::endl;
 	}
       previous_X = X;
       X    = P*X;
@@ -1445,11 +1444,11 @@ translation_t translation_solver(const Eigen::MatrixXd & M, const rotation_t & r
   double alpha = 0.1;
   double error = 1;
   int k = 0;
-  int iterations = 10;
+ 
   translation_t state = translation;
   translation_t grad = Eigen::Vector3d::Zero(3,1);
   translation_t new_state = state - alpha * grad; 
-  while (error > tol && k < iterations){
+  while (error > tol ){
     grad = gradient_translation(M, rotation, state);
     new_state = state - alpha * grad; 
     double f_obj_current = objective_function(M, rotation, state);
@@ -1470,15 +1469,16 @@ translation_t translation_solver(const Eigen::MatrixXd & M, const rotation_t & r
   return state;
 }
   
-void amm(const RelativeAdapterBase & adapter, double & tol, const rotation_t & initial_state )
+  transformation_t amm(const RelativeAdapterBase & adapter, double & tol, const rotation_t & initial_state,
+		       const translation_t & initial_translation )
 {
 
   Indices idx(adapter.getNumberCorrespondences());
-  size_t numberCorrespondences = 5;//idx.size();
+  size_t numberCorrespondences = idx.size();
   Eigen::MatrixXd M(numberCorrespondences, 18);   
   for( size_t i = 0; i < numberCorrespondences; i++ )
   {
-    std::cout << "iteration: " << i << std::endl;
+    //std::cout << "iteration: " << i << std::endl;
     bearingVector_t d1 = adapter.getBearingVector1(idx[i]);
     bearingVector_t d2 = adapter.getBearingVector2(idx[i]);
     translation_t v1 = adapter.getCamOffset1(idx[i]);
@@ -1536,37 +1536,34 @@ void amm(const RelativeAdapterBase & adapter, double & tol, const rotation_t & i
     std::cout << "l2: "  << " " << l2(0,0) << " " << l2(1,0) << " " << l2(2,0) << " "
     << l2(3,0) << " " << l2(4,0) << " " << l2(5,0) << std::endl;*/
    }
-  std::cout << "M" << std::endl << M << std::endl;
+  //std::cout << "M" << std::endl << M << std::endl;
   /*The M matrix is obtained. It is now necessary to implement the AMM*/
   double error = 1;
-  int max = 2;
+  int max = 100;
   int iteration = 0;
   rotation_t state = initial_state;
-  translation_t translation(1,1,1);
+  translation_t translation = initial_translation;
   rotation_t previous_state = initial_state;
-   
+  double tol_solvers = 1e-12;  
   while (error > tol && iteration < max){
     previous_state = state;
-    //minimize rotation state = min(state, translation, M);
-    //minimize translation = min(state, translation, M);
-    /*double val = objective_function(M, state, translation);
-    Eigen::Matrix3d grad = gradient_function(M, state, translation);
-    double tol = 1e-9;
-    state = rotation_solver(state, translation, M, tol);
-    std::cout << "Rotation: " << std::endl << state << std::endl;
-
-    std::cout << "value function: " << val << std::endl;
-    std::cout << "gradient : " << std::endl << grad << std::endl;
-    std::cout << "rotation: "    << std::endl << state << std::endl;
-    std::cout << "translation: " << std::endl << translation << std::endl;
-    error = (state - previous_state).squaredNorm();
-    std::cout << "Error: " << error << " " << iteration << std::endl;*/
-    //translation_t test = gradient_translation(M, state, translation);
-    std::cout << "Iteration : " << iteration << std::endl;
-    translation_t test = translation_solver(M, state, translation, 1e-6);
-    std::cout << std::endl << "Test value: " << std::endl << test << std::endl;
+    //minimize rotation state
+    /*std::cout << "**************************************************"      << std::endl;
+    std::cout << "Iteration: "                              << iteration   << std::endl;
+    std::cout << "Rotation at the beginning: " << std::endl << state       << std::endl;*/
+    state = rotation_solver(state, translation, M, tol_solvers);
+    /*std::cout << "New rotation: "              << std::endl << state       << std::endl;
+      std::cout << "The translation: "           << std::endl << translation << std::endl;*/ 
+    translation = translation_solver(M, state, translation, tol_solvers);
+    /*std::cout << "New translation: "           << std::endl << translation << std::endl;
+      std::cout << std::endl << std::endl;*/
+    error = (previous_state - state).norm();
     iteration++;
   }
-}
+  transformation_t solution;
+  solution.block<3,3>(0,0) = state;
+  solution.block<3,1>(0,3) = translation;
+  return solution;
+  }
 }
 }

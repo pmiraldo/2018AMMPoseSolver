@@ -501,13 +501,24 @@ transformation_t optimize_nonlinear(
     RelativeAdapterBase & adapter,
     const std::vector<int> & indices );
 
-  void amm(const RelativeAdapterBase& adapter, double &tol, const rotation_t & initial_state);
+  transformation_t amm(const RelativeAdapterBase& adapter, double &tol, const rotation_t & initial_state,
+		       const translation_t & initial_translation);
+  
   double objective_function(const Eigen::MatrixXd & M, const rotation_t & rotation, const translation_t & translation);
+  
   Eigen::Matrix3d gradient_function(const Eigen::MatrixXd & M, const rotation_t & rotation,
 				    const translation_t & translation);
+
   Eigen::Matrix3d exp_R( Eigen::Matrix3d & X );
+
   rotation_t rotation_solver(rotation_t & state_rotation, const  translation_t &translation,
                              const Eigen::MatrixXd & M  , double tol);
+
+  translation_t gradient_translation(const Eigen::MatrixXd & M, const rotation_t & rotation,
+				       const translation_t & translation);
+
+  translation_t translation_solver(const Eigen::MatrixXd & M, const rotation_t & rotation,
+				   const translation_t & translation, double tol);
 
 
 

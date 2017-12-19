@@ -36,6 +36,8 @@
 #include <opengv/relative_pose/NoncentralRelativeAdapter.hpp>
 #include <sstream>
 #include <fstream>
+#include <math.h>
+#include <random>
 
 #include "random_generators.hpp"
 #include "experiment_helpers.hpp"
@@ -197,7 +199,57 @@ int main( int argc, char** argv )
   std::cout << "timings from nonlinear algorithm: ";
   std::cout << nonlinear_time << std::endl;
   std::cout << "AMM" << std::endl;
-  double tol = 1e-9;
+  double tol = 1e-12;
   rotation_t initial_state = MatrixXd::Identity(3,3);
-  relative_pose::amm(adapter, tol, initial_state);
+
+  transformation_t amm_solution;
+ 
+  std::mt19937 rng;
+  rng.seed(std::random_device()());
+  std::uniform_int_distribution<std::mt19937::result_type> dist(0.01,1); // distribution in range [0, 1]
+  double angle =  M_PI / 18;
+  double wx = 0; double wy = 0; double wz = 1;
+  Eigen::Matrix3d skew_matrix = Eigen::Matrix3d::Zero(3,3);
+  skew_matrix(0,1) = -wz; skew_matrix(0,2) = wy;
+  skew_matrix(1,0) =  wz; skew_matrix(1,2) = -wx;
+  skew_matrix(2,0) = -wy; skew_matrix(2,1) =  wx;
+  rotation_t error_rotation = Eigen::Matrix3d::Identity(3,3) +
+                              (std::sin(angle) / angle)*skew_matrix +
+                              ( ( 1 - std::cos(angle) * std::cos(angle) ) / (angle * angle) ) * skew_matrix * skew_matrix;
+
+  translation_t error_translation = Eigen::Vector3d::Random(3,1);
+  error_translation = error_translation / error_translation.norm();
+  rotation_t  initial_rotation = rotation * error_rotation;
+  translation_t initial_translation = position + error_translation;
+  gettimeofday(&tic,0);
+  for(int i = 0; i < iterations; i++){
+    amm_solution  = relative_pose::amm(adapter, tol, initial_rotation, initial_translation);//initial_state);
+  };
+  gettimeofday(&toc,0); 
+  double time_amm_solution =
+    TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
+
+  std::cout << "********************************************************" << std::endl;
+  std::cout << "Vector error: " << std::endl << skew_matrix << std::endl;
+  std::cout << "Angle:        " << std::endl << angle       << std::endl;
+  std::cout << "Erro da rotação: "    << std::endl << error_rotation    << std::endl;
+  std::cout << "Erro da translação: " << std::endl << error_translation << std::endl;
+  std::cout << "Solution presented by algorithm amm: " << std::endl;
+  std::cout << amm_solution << std::endl;
+  std::cout << "Real rotation : " << std::endl << rotation            << std::endl;
+  std::cout << "Corrupted rotation: " << std::endl << initial_rotation    << std::endl;
+  std::cout << "Initial translation: " << std::endl << initial_translation << std::endl;
+  std::cout << "Error AMM: " << std::endl;
+  std::cout << (amm_solution.block<3,3>(0,0) - rotation).norm() << std::endl;
+  std::cout << "Time: " << time_amm_solution << std::endl;
+
+  std::cout << "Error 17: " << std::endl;
+  std::cout << (seventeenpt_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
+  std::cout << "Time: " << seventeenpt_time_all << std::endl;
+  std::cout << "Error nonlin: " << std::endl;
+  std::cout << (nonlinear_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
+  std::cout << "Time: " << nonlinear_time << std::endl;
+  std::cout << "GE: " << std::endl;
+  std::cout << (ge_rotation - rotation).norm() << std::endl;
+  std::cout << "Time: " << ge_time << std::endl;
 }
