@@ -207,7 +207,7 @@ int main( int argc, char** argv )
   std::mt19937 rng;
   rng.seed(std::random_device()());
   std::uniform_int_distribution<std::mt19937::result_type> dist(0.01,1); // distribution in range [0, 1]
-  double angle =  M_PI / 18;
+  double angle =  M_PI / 36;
   double wx = 0; double wy = 0; double wz = 1;
   Eigen::Matrix3d skew_matrix = Eigen::Matrix3d::Zero(3,3);
   skew_matrix(0,1) = -wz; skew_matrix(0,2) = wy;
@@ -220,7 +220,7 @@ int main( int argc, char** argv )
   translation_t error_translation = Eigen::Vector3d::Random(3,1);
   error_translation = error_translation / error_translation.norm();
   rotation_t  initial_rotation = rotation * error_rotation;
-  translation_t initial_translation = position + error_translation;
+  translation_t initial_translation = position;// + error_translation;
   gettimeofday(&tic,0);
   for(int i = 0; i < iterations; i++){
     amm_solution  = relative_pose::amm(adapter, tol, initial_rotation, initial_translation);//initial_state);

@@ -382,7 +382,7 @@ rotations_t sixpt(
  * \param[in] useWeights Use weights to weight the summation terms?
  * \return Rotation matrix from viewpoint 2 to viewpoint 1.
  */
-rotation_t ge(
+transformation_t ge(
     const RelativeAdapterBase & adapter,
     geOutput_t & output,
     bool useWeights = false );
@@ -401,7 +401,7 @@ rotation_t ge(
  * \param[in] useWeights Use weights to weight the summation terms?
  * \return Rotation matrix from viewpoint 2 to viewpoint 1.
  */
-rotation_t ge(
+transformation_t ge(
     const RelativeAdapterBase & adapter,
     const std::vector<int> & indices,
     geOutput_t & output,
@@ -418,7 +418,7 @@ rotation_t ge(
  * \param[in] useWeights Use weights to weight the summation terms?
  * \return Rotation matrix from viewpoint 2 to viewpoint 1.
  */
-rotation_t ge( const RelativeAdapterBase & adapter, bool useWeights = false );
+transformation_t ge( const RelativeAdapterBase & adapter, bool useWeights = false );
 
 /**
  * \brief Compute the rotation matrix between two non-central viewpoints as an
@@ -432,7 +432,7 @@ rotation_t ge( const RelativeAdapterBase & adapter, bool useWeights = false );
  * \param[in] useWeights Use weights to weight the summation terms?
  * \return Rotation matrix from viewpoint 2 to viewpoint 1.
  */
-rotation_t ge(
+transformation_t ge(
     const RelativeAdapterBase & adapter,
     const std::vector<int> & indices,
     bool useWeights = false );

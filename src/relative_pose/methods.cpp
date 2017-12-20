@@ -653,7 +653,7 @@ namespace opengv
 namespace relative_pose
 {
 
-rotation_t ge(
+transformation_t ge(
     const RelativeAdapterBase & adapter,
     const Indices & indices,
     geOutput_t & output,
@@ -806,13 +806,18 @@ rotation_t ge(
       x1P, y1P, z1P, x2P, y2P, z2P,
       m11P, m12P, m22P, math::rot2cayley(startingRotation), output);
 
-  return output.rotation;
+  //return output.rotation;
+  transformation_t transformation;
+  transformation.block<3,3>(0,0) = output.rotation;
+  transformation.col(3) = output.translation.block<3,1>(0,0);
+
+  return transformation;
 }
 
 }
 }
 
-opengv::rotation_t
+opengv::transformation_t
 opengv::relative_pose::ge(
     const RelativeAdapterBase & adapter,
     geOutput_t & output,
@@ -822,7 +827,7 @@ opengv::relative_pose::ge(
   return ge(adapter,idx,output,useWeights);
 }
 
-opengv::rotation_t
+opengv::transformation_t
 opengv::relative_pose::ge(
     const RelativeAdapterBase & adapter,
     const std::vector<int> & indices,
@@ -833,7 +838,7 @@ opengv::relative_pose::ge(
   return ge(adapter,idx,output,useWeights);
 }
 
-opengv::rotation_t
+opengv::transformation_t
 opengv::relative_pose::ge( const RelativeAdapterBase & adapter, bool useWeights )
 {
   geOutput_t output;
@@ -841,7 +846,7 @@ opengv::relative_pose::ge( const RelativeAdapterBase & adapter, bool useWeights 
   return ge(adapter,output,useWeights);
 }
 
-opengv::rotation_t
+opengv::transformation_t
 opengv::relative_pose::ge(
     const RelativeAdapterBase & adapter,
     const std::vector<int> & indices,
