@@ -130,6 +130,9 @@ set( OPENGV_SOURCE_FILES
   src/relative_pose/MANoncentralRelative.cpp
   src/relative_pose/MANoncentralRelativeMulti.cpp
   src/point_cloud/MAPointCloud.cpp
+
+  #supporting files
+  src/relative_pose/squared_function_info.cpp
   test/container.cpp
   test/statistic_info.cpp
   test/results.cpp)
@@ -178,6 +181,10 @@ set( OPENGV_HEADER_FILES
   include/opengv/relative_pose/MANoncentralRelative.hpp
   include/opengv/relative_pose/MANoncentralRelativeMulti.hpp
   include/opengv/point_cloud/MAPointCloud.hpp
+
+  #supporting files
+  include/opengv/relative_pose/objective_function_info.hpp
+  include/opengv/relative_pose/squared_function_info.hpp
   test/container.h
   test/statistic_info.h)
 

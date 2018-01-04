@@ -11,7 +11,7 @@
  * * Redistributions in binary form must reproduce the above copyright        *
  *   notice, this list of conditions and the following disclaimer in the      *
  *   documentation and/or other materials provided with the distribution.     *
-´ * * Neither the name of ANU nor the names of its contributors may be         *
+ * * Neither the name of ANU nor the names of its contributors may be         *
  *   used to endorse or promote products derived from this software without   *
  *   specific prior written permission.                                       *
  *                                                                            *
@@ -55,12 +55,12 @@ int main( int argc, char** argv )
   // initialize random seed
   initializeRandomSeed();
   int n_experiments = 10;
-  int noise_levels = 8;
+  int noise_levels = 4;
 
   //set experiment parameters
   double noise = 0.0;
   double outlierFraction = 0.0;
-  size_t numberPoints = 100;
+  size_t numberPoints = 50;
   int numberCameras = 8;
 
   std::vector<Container> information_list17pt;
@@ -193,7 +193,7 @@ int main( int argc, char** argv )
       adapter.sett12(t_perturbed);
       adapter.setR12(R_perturbed);
       transformation_t nonlinear_transformation_10 = relative_pose::optimize_nonlinear(adapter,indices10);
-
+      
       //print results
       /*std::cout << "results from 6pt algorithm:" << std::endl;
       for( size_t i = 0; i < sixpt_rotations.size(); i++ ){
@@ -222,7 +222,9 @@ int main( int argc, char** argv )
       std::cout << "timings from nonlinear algorithm: ";
       std::cout << nonlinear_time << std::endl;
       std::cout << "AMM" << std::endl;*/
-      double tol = 1e-12;
+      std::cout << "Statistical info: " << std::endl;
+      std::cout << "Noise: " << noise << std::endl << "n times: "  << index_stat << std::endl << "total realizations: " << total_realizations << std::endl;
+      double tol = 1e-6;
       rotation_t initial_state = MatrixXd::Identity(3,3);
 
       transformation_t amm_solution;
@@ -244,11 +246,26 @@ int main( int argc, char** argv )
       error_translation = error_translation / error_translation.norm();
       rotation_t  initial_rotation = rotation * error_rotation;
       translation_t initial_translation = position;// + error_translation;
+ 
+      //Create point with info
+      objective_function_info * info_container = NULL;
+      info_container = new squared_function_info(adapter);
+     
+      std::cout << "get fo:" << std::endl;
+      double aux = info_container->objective_function_value(initial_rotation, initial_translation);
+      std::cout << "gradient rotation" << std::endl;
+      std::cout <<  info_container->rotation_gradient(initial_rotation, initial_translation) << std::endl;
+      std::cout << "translation gradient" << std::endl;
+      std::cout <<  info_container->translation_gradient(initial_rotation, initial_translation) << std::endl;
+
+      std::cout << aux << std::endl; 
       gettimeofday(&tic,0);
-      for(int i = 0; i < iterations; i++){
-	amm_solution  = relative_pose::amm(adapter, tol, initial_rotation, initial_translation);//initial_state);
+      for(int i = 0; i < (iterations/10); i++){
+      amm_solution  = relative_pose::amm(adapter, tol, initial_rotation, initial_translation, info_container);//initial_state);
       };
-      gettimeofday(&toc,0); 
+      gettimeofday(&toc,0);
+      std::cout << "First solved" << std::endl;
+      delete info_container;
       double time_amm_solution = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
 
       std::cout << "********************************************************" << std::endl;
