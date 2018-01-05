@@ -131,8 +131,15 @@ set( OPENGV_SOURCE_FILES
   src/relative_pose/MANoncentralRelativeMulti.cpp
   src/point_cloud/MAPointCloud.cpp
 
+  #optimization tools
+  src/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.cpp
+  src/optimization_tools/objective_function_tools/SquaredFunctionInfo.cpp
+
+  #amm
+  src/amm.cpp
+
+
   #supporting files
-  src/relative_pose/squared_function_info.cpp
   test/container.cpp
   test/statistic_info.cpp
   test/results.cpp)
@@ -182,9 +189,15 @@ set( OPENGV_HEADER_FILES
   include/opengv/relative_pose/MANoncentralRelativeMulti.hpp
   include/opengv/point_cloud/MAPointCloud.hpp
 
+  #optimizations tools
+  include/opengv/optimization_tools/solver_tools/SolverTools.hpp
+  include/opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp
+  include/opengv/optimization_tools/objective_function_tools/ObjectiveFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/SquaredFunctionInfo.hpp
+
+  #amm
+  include/opengv/amm.hpp
   #supporting files
-  include/opengv/relative_pose/objective_function_info.hpp
-  include/opengv/relative_pose/squared_function_info.hpp
   test/container.h
   test/statistic_info.h)
 

@@ -41,8 +41,7 @@
 #include <vector>
 #include <opengv/types.hpp>
 #include <opengv/relative_pose/RelativeAdapterBase.hpp>
-#include <opengv/relative_pose/objective_function_info.hpp>
-#include <opengv/relative_pose/squared_function_info.hpp>
+
 
 
 /**
@@ -504,27 +503,8 @@ transformation_t optimize_nonlinear(
     RelativeAdapterBase & adapter,
     const std::vector<int> & indices );
 
-  transformation_t amm(const RelativeAdapterBase& adapter, double &tol, const rotation_t & initial_state,
-		       const translation_t & initial_translation, objective_function_info * info_function);
-  
-  //double objective_function(const Eigen::MatrixXd & M, const rotation_t & rotation, const translation_t & translation);
-  
-  //Eigen::Matrix3d gradient_function(const Eigen::MatrixXd & M, const rotation_t & rotation,
-  //			    const translation_t & translation);
-
-  Eigen::Matrix3d exp_R( Eigen::Matrix3d & X );
-
-  rotation_t rotation_solver(rotation_t & state_rotation, const  translation_t &translation,
-                             double tol, objective_function_info * info_function);
-
-  //translation_t gradient_translation(const Eigen::MatrixXd & M, const rotation_t & rotation,
-  //			       const translation_t & translation);
-
-  translation_t translation_solver(const Eigen::MatrixXd & M, const rotation_t & rotation,
-  				   translation_t & translation, double tol, objective_function_info * info_function);
-
-
-
+  //  transformation_t amm(const RelativeAdapterBase& adapter, double &tol, const rotation_t & initial_state,
+  //		       const translation_t & initial_translation, objective_function_info * info_function);
 }
 }
 

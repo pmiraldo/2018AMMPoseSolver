@@ -45,6 +45,11 @@
 #include "experiment_helpers.hpp"
 #include "time_measurement.hpp"
 
+#include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
+#include <opengv/optimization_tools/objective_function_tools/SquaredFunctionInfo.hpp>
+#include <opengv/amm.hpp>
+
+
 
 using namespace std;
 using namespace Eigen;
@@ -54,8 +59,8 @@ int main( int argc, char** argv )
 {
   // initialize random seed
   initializeRandomSeed();
-  int n_experiments = 10;
-  int noise_levels = 4;
+  int n_experiments = 1;//10;
+  int noise_levels = 1;//4;
 
   //set experiment parameters
   double noise = 0.0;
@@ -70,7 +75,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
     //set noise
-    double noise = 0.0 + 1 * index;
+    double noise = 5;//0.0 + 1 * index;
     std::cout << std::endl << std::endl << "***************************" << std::endl;
     std::cout << "Noise: " << noise << std::endl;
     Container aux_17points(noise, "17 points");
@@ -224,15 +229,13 @@ int main( int argc, char** argv )
       std::cout << "AMM" << std::endl;*/
       std::cout << "Statistical info: " << std::endl;
       std::cout << "Noise: " << noise << std::endl << "n times: "  << index_stat << std::endl << "total realizations: " << total_realizations << std::endl;
-      double tol = 1e-6;
+      double tol = 1e-4;
       rotation_t initial_state = MatrixXd::Identity(3,3);
 
-      transformation_t amm_solution;
- 
       std::mt19937 rng;
       rng.seed(std::random_device()());
       std::uniform_int_distribution<std::mt19937::result_type> dist(0.01,1); // distribution in range [0, 1]
-      double angle =  M_PI / 18;
+      double angle =  M_PI / 90;
       double wx = 0; double wy = 0; double wz = 1;
       Eigen::Matrix3d skew_matrix = Eigen::Matrix3d::Zero(3,3);
       skew_matrix(0,1) = -wz; skew_matrix(0,2) = wy;
@@ -248,37 +251,33 @@ int main( int argc, char** argv )
       translation_t initial_translation = position;// + error_translation;
  
       //Create point with info
-      objective_function_info * info_container = NULL;
-      info_container = new squared_function_info(adapter);
-     
-      std::cout << "get fo:" << std::endl;
-      double aux = info_container->objective_function_value(initial_rotation, initial_translation);
-      std::cout << "gradient rotation" << std::endl;
-      std::cout <<  info_container->rotation_gradient(initial_rotation, initial_translation) << std::endl;
-      std::cout << "translation gradient" << std::endl;
-      std::cout <<  info_container->translation_gradient(initial_rotation, initial_translation) << std::endl;
+      ObjectiveFunctionInfo * info_container = NULL;
+      info_container = new SquaredFunctionInfo(adapter);
 
-      std::cout << aux << std::endl; 
+      //Create solver pointer
+      SolverTools * solver_container = NULL;
+      solver_container = new SolverToolsNoncentralRelativePose();
+      amm solver_object;
       gettimeofday(&tic,0);
-      for(int i = 0; i < (iterations/10); i++){
-      amm_solution  = relative_pose::amm(adapter, tol, initial_rotation, initial_translation, info_container);//initial_state);
-      };
-      gettimeofday(&toc,0);
-      std::cout << "First solved" << std::endl;
-      delete info_container;
-      double time_amm_solution = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
+      transformation_t amm_solution = solver_object.amm_solver( tol, initial_rotation, initial_translation, info_container, solver_container);
+      gettimeofday(&toc, 0);
+      double time_amm_solution = TIMETODOUBLE(timeval_minus(toc,tic)); //  / iterations;
 
-      std::cout << "********************************************************" << std::endl;
-      std::cout << "Vector error: " << std::endl << skew_matrix << std::endl;
-      std::cout << "Angle:        " << std::endl << angle       << std::endl;
-      std::cout << "Erro da rotação: "    << std::endl << error_rotation    << std::endl;
-      std::cout << "Erro da translação: " << std::endl << error_translation << std::endl;
+      delete info_container;
+      delete solver_container;
+    
+      //std::cout << "********************************************************" << std::endl;
+      //std::cout << "Vector error: " << std::endl << skew_matrix << std::endl;
+      //std::cout << "Angle:        " << std::endl << angle       << std::endl;
+      //std::cout << "Erro da rotação: "    << std::endl << error_rotation    << std::endl;
+      //std::cout << "Erro da translação: " << std::endl << error_translation << std::endl;
       std::cout << "Solution presented by algorithm amm: " << std::endl;
       std::cout << amm_solution << std::endl;
-      std::cout << "Real rotation : " << std::endl << rotation            << std::endl;
-      std::cout << "Corrupted rotation: " << std::endl << initial_rotation    << std::endl;
-      std::cout << "Initial translation: " << std::endl << initial_translation << std::endl;
-      std::cout << "Error AMM: " << std::endl;
+      std::cout << "Real rotation : "      << std::endl             << rotation            << std::endl;
+      std::cout << "Real translation: "    << std::endl             << position            << std::endl;
+      std::cout << "Initial rotation: "    << std::endl             << initial_rotation    << std::endl;
+      std::cout << "Initial translation: " << std::endl             << initial_translation << std::endl;
+      std::cout << "Error AMM: "           << std::endl;
       std::cout << (amm_solution.block<3,3>(0,0) - rotation).norm() << std::endl;
       std::cout << "Time: " << time_amm_solution << std::endl;
 
@@ -305,7 +304,7 @@ int main( int argc, char** argv )
           aux_nonlinear.add_error_information(rotation, nonlinear_transformation.block<3,3>(0,0),
                                           position, nonlinear_transformation.block<3,1>(0,3), nonlinear_time);
           aux_riemann.add_error_information(rotation, amm_solution.block<3,3>(0,0),
-					    position, amm_solution.block<3,1>(0,3), time_amm_solution);
+	  				    position, amm_solution.block<3,1>(0,3), time_amm_solution);
           aux_ge.add_error_information(rotation, ge_transformation.block<3,3>(0,0),
                                    position, ge_transformation.block<3,1>(0,3), ge_time);
           aux_17points.add_error_information(rotation, seventeenpt_transformation.block<3,3>(0,0),
