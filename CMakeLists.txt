@@ -134,6 +134,7 @@ set( OPENGV_SOURCE_FILES
   #optimization tools
   src/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.cpp
   src/optimization_tools/objective_function_tools/SquaredFunctionInfo.cpp
+  src/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.cpp
 
   #amm
   src/amm.cpp
@@ -194,7 +195,7 @@ set( OPENGV_HEADER_FILES
   include/opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp
   include/opengv/optimization_tools/objective_function_tools/ObjectiveFunctionInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/SquaredFunctionInfo.hpp
-
+  include/opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp
   #amm
   include/opengv/amm.hpp
   #supporting files
