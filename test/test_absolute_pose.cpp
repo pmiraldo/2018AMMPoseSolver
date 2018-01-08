@@ -34,6 +34,7 @@
 #include <iomanip>
 #include <opengv/absolute_pose/methods.hpp>
 #include <opengv/absolute_pose/CentralAbsoluteAdapter.hpp>
+#include <opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp>
 #include <opengv/math/cayley.hpp>
 #include <sstream>
 #include <fstream>
@@ -207,4 +208,8 @@ int main( int argc, char** argv )
   std::cout << upnp_time << std::endl;
   std::cout << "timings from nonlinear algorithm: ";
   std::cout << nonlinear_time << std::endl;
-}
+
+
+  std::cout << "Verification Info" << std::endl;
+  ObjectiveFunctionInfo * ptr_obj_func = new GlobalPnPFunctionInfo(adapter);
+} 
