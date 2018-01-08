@@ -44,12 +44,11 @@ GlobalPNPFunctionInfo:: GlobalPNPFunctionInfo(const opengv::absolute_pose::Absol
     Mr1_i.block<1,3>(1,0) = Vi(1,0) * xi.transpose();Mr1_i.block<1,3>(1,3) = Vi(1,1) * xi.transpose();Mr1_i.block<1,3>(1,6) = Vi(1,2) * xi.transpose();
     Mr1_i.block<1,3>(2,0) = Vi(2,0) * xi.transpose();Mr1_i.block<1,3>(2,3) = Vi(2,1) * xi.transpose();Mr1_i.block<1,3>(2,6) = Vi(2,2) * xi.transpose();
 
+    Mr2_i.block<1,3>(0,0) = vi(0,0) * xi.transpose();Mr2_i.block<1,3>(1,0) = vi(0,0) * xi.transpose();Mr2_i.block<1,3>(0,0) = vi(2,0) * xi.transpose();
+    double alpha  = vi.transpose() * vi;
 
+    Mr = Mr + (Mr?)
   }
 
-}
-
-
-
-;
+};
 GlobalPNPFunctionInfo:: ~GlobalPNPFunctionInfo(){};
