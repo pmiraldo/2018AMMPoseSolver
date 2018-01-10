@@ -7,7 +7,7 @@
 
 class GlobalPnPFunctionInfo : public ObjectiveFunctionInfo {
 public:
-  GlobalPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter );
+  GlobalPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter, const opengv::rotation_t &rot, const opengv::translation_t &trans );
   ~GlobalPnPFunctionInfo();
 
   double objective_function_value(const opengv::rotation_t & rotation,
@@ -22,7 +22,7 @@ private:
   Eigen::MatrixXd Mrt;
   Eigen::MatrixXd Mr; 
 
-  Eigen::Vector3d vt; 
+  Eigen::VectorXd vt; 
   Eigen::VectorXd vr;
 
 };

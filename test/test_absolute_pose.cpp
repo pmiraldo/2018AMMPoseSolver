@@ -211,5 +211,15 @@ int main( int argc, char** argv )
 
 
   std::cout << "Verification Info" << std::endl;
-  ObjectiveFunctionInfo * ptr_obj_func = new GlobalPnPFunctionInfo(adapter);
+  rotation_t rot = rotation.inverse();
+  translation_t trans = -rot * position;
+  std::cout << "Rotation: "    << std::endl << rot << std::endl;
+  std::cout << "Translation: " << std::endl << trans << std::endl;
+  ObjectiveFunctionInfo * ptr_obj_func = new GlobalPnPFunctionInfo(adapter, rotation, position);
+  //std::cout << "Objective function value :" << std::endl;
+  //std::cout << ptr_obj_func->objective_function_value(rot, trans) << std::endl;
+  //std::cout << "Translation grad:" << std::endl;
+  //std::cout << ptr_obj_func->translation_gradient(rot, trans) << std::endl;
+  //std::cout << "Rotation grad: " << std::endl;
+  //std::cout << ptr_obj_func->rotation_gradient(rot, trans) << std::endl;
 } 
