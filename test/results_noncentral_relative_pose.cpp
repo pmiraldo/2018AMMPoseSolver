@@ -47,6 +47,7 @@
 
 #include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
 #include <opengv/optimization_tools/objective_function_tools/SquaredFunctionInfo.hpp>
+#include <opengv/optimization_tools/objective_function_tools/SquaredFunctionNoIterationsInfo.hpp>
 #include <opengv/amm.hpp>
 
 
@@ -246,9 +247,9 @@ int main( int argc, char** argv )
                               ( ( 1 - std::cos(angle) * std::cos(angle) ) / (angle * angle) ) * skew_matrix * skew_matrix;
 
       translation_t error_translation = Eigen::Vector3d::Random(3,1);
-      error_translation = error_translation / error_translation.norm();
-      rotation_t  initial_rotation = rotation * error_rotation;
-      translation_t initial_translation = position;// + error_translation;
+      error_translation = 0.2 * error_translation / error_translation.norm();
+      rotation_t  initial_rotation = R_perturbed;//rotation * error_rotation;
+      translation_t initial_translation = t_perturbed;//position + error_translation;
  
       //Create point with info
       ObjectiveFunctionInfo * info_container = NULL;
@@ -263,9 +264,23 @@ int main( int argc, char** argv )
       gettimeofday(&toc, 0);
       double time_amm_solution = TIMETODOUBLE(timeval_minus(toc,tic)); //  / iterations;
 
+      //NEW APPROACE SAME THING
+       //Create point with info
+      ObjectiveFunctionInfo * info_container_noiterations = NULL;
+      info_container_noiterations = new SquaredFunctionNoIterationsInfo(adapter);
+
+      gettimeofday(&tic,0);
+      transformation_t amm_solution_noiterations = solver_object.amm_solver( tol, initial_rotation,
+									          initial_translation,
+									          info_container_noiterations,
+									          solver_container);
+      gettimeofday(&toc, 0);
+      double time_amm_solution_noiterations = TIMETODOUBLE(timeval_minus(toc,tic)); //  / iterations;
+
       delete info_container;
       delete solver_container;
-    
+      delete info_container_noiterations;
+
       //std::cout << "********************************************************" << std::endl;
       //std::cout << "Vector error: " << std::endl << skew_matrix << std::endl;
       //std::cout << "Angle:        " << std::endl << angle       << std::endl;
@@ -280,6 +295,10 @@ int main( int argc, char** argv )
       std::cout << "Error AMM: "           << std::endl;
       std::cout << (amm_solution.block<3,3>(0,0) - rotation).norm() << std::endl;
       std::cout << "Time: " << time_amm_solution << std::endl;
+
+      std::cout << "Error AMM no iterations: "           << std::endl;
+      std::cout << (amm_solution_noiterations.block<3,3>(0,0) - rotation).norm() << std::endl;
+      std::cout << "Time: " << time_amm_solution_noiterations << std::endl;
 
       std::cout << "Error 17: " << std::endl;
       std::cout << (seventeenpt_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;

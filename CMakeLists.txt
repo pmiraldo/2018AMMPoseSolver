@@ -134,6 +134,7 @@ set( OPENGV_SOURCE_FILES
   #optimization tools
   src/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.cpp
   src/optimization_tools/objective_function_tools/SquaredFunctionInfo.cpp
+  src/optimization_tools/objective_function_tools/SquaredFunctionNoIterationsInfo.cpp
   src/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.cpp
 
   #amm
@@ -143,7 +144,7 @@ set( OPENGV_SOURCE_FILES
   #supporting files
   test/container.cpp
   test/statistic_info.cpp
-  test/results.cpp)
+  )
 
 
 set( OPENGV_HEADER_FILES
@@ -195,6 +196,7 @@ set( OPENGV_HEADER_FILES
   include/opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp
   include/opengv/optimization_tools/objective_function_tools/ObjectiveFunctionInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/SquaredFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/SquaredFunctionNoIterationsInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp
   #amm
   include/opengv/amm.hpp
@@ -277,12 +279,18 @@ IF (BUILD_TESTS)
   #  WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
   #  COMMAND test_noncentral_relative_pose)
 
-  add_executable( results test/results.cpp )
-  target_link_libraries( results opengv random_generators )
-  add_test(NAME results
+  add_executable( results_noncentral_relative_pose test/results_noncentral_relative_pose.cpp )
+  target_link_libraries( results_noncentral_relative_pose opengv random_generators )
+  add_test(NAME results_noncentral_relative_pose
     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMAND results)
+    COMMAND results_noncentral_relative_pose)
 
+   add_executable( results_noncentral_absolute_pose test/results_noncentral_absolute_pose.cpp )
+   target_link_libraries( results_noncentral_absolute_pose opengv random_generators )
+   add_test(NAME results_noncentral_absolute_pose
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMAND results_noncentral_absolute_pose)
+  
   add_executable( test_noncentral_relative_pose_sac test/test_noncentral_relative_pose_sac.cpp )
   target_link_libraries( test_noncentral_relative_pose_sac opengv random_generators )
   add_test(NAME test_noncentral_relative_pose_sac
@@ -342,7 +350,8 @@ IF (BUILD_TESTS)
     test_relative_pose_rotationOnly_sac
     test_relative_pose_sac
     #test_noncentral_relative_pose
-    results
+    results_noncentral_relative_pose
+    results_noncentral_absolute_pose
     test_noncentral_relative_pose_sac
     test_multi_noncentral_relative_pose_sac
     test_eigensolver_sac
