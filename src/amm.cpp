@@ -2,6 +2,7 @@
 #include <opengv/types.hpp>
 #include <opengv/optimization_tools/solver_tools/SolverTools.hpp>
 #include <opengv/optimization_tools/objective_function_tools/ObjectiveFunctionInfo.hpp>
+#include <iostream>
 
 amm::amm(){}
 
@@ -22,16 +23,15 @@ opengv::transformation_t amm::amm_solver(double & tol,
   while (error > tol && iteration < max){
     previous_state = state;
     //minimize rotation state
-    /*std::cout << "**************************************************"      << std::endl;
-    std::cout << "Iteration: "                              << iteration   << std::endl;
-    std::cout << "Rotation at the beginning: " << std::endl << state       << std::endl;*/
+   
     state = solver_container->rotation_solver(state, translation, tol_solvers, objective_function_container);
 
     /*std::cout << "New rotation: "              << std::endl << state       << std::endl;
-    std::cout << "The translation: "           << std::endl << translation << std::endl;*/
+      std::cout << "The translation: "           << std::endl << translation << std::endl;*/
     translation = solver_container->translation_solver(state, translation, tol_solvers, objective_function_container);
     /*std::cout << "New translation: "           << std::endl << translation << std::endl;
-      std::cout << std::endl << std::endl;*/
+      std::cout << "End of iteration: " << std::endl;*/
+   
     error = (previous_state - state).norm();
     iteration++;
   }

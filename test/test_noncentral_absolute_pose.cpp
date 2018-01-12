@@ -35,8 +35,6 @@
 #include <opengv/amm.hpp>
 #include <opengv/absolute_pose/methods.hpp>
 #include <opengv/absolute_pose/NoncentralAbsoluteAdapter.hpp>
-#include <opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp>
-#include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
 #include <sstream>
 #include <fstream>
 
@@ -189,40 +187,4 @@ int main( int argc, char** argv )
   std::cout << upnp_time << std::endl;
   std::cout << "timings from nonlinear algorithm: ";
   std::cout << nonlinear_time << std::endl;
-
-   std::cout << "Verification Info" << std::endl;
-   rotation_t rot = Eigen::Matrix3d::Identity(3,3);//rotation.inverse();
-   translation_t trans = Eigen::MatrixXd::Zero(3,1);
-   trans(0,0) = 1;
-   trans(1,0) = 1;
-   trans(2,0) = 1;
-   std::cout << "Rotation: "    << std::endl << rot << std::endl;
-   std::cout << "Translation: " << std::endl << trans << std::endl;
-   ObjectiveFunctionInfo * info_container = new GlobalPnPFunctionInfo(adapter, rotation, position);
-   //Create solver pointer
-   SolverTools * solver_container = NULL;
-   solver_container = new SolverToolsNoncentralRelativePose();
-   amm solver_object;
-   gettimeofday(&tic,0);
-   double tol = 1e-6;
-   transformation_t amm_solution = solver_object.amm_solver( tol, rotation, position, info_container, solver_container);
-   gettimeofday(&toc, 0);
-   double time_amm_solution = TIMETODOUBLE(timeval_minus(toc,tic));
-   
-   std::cout << "Time: " << time_amm_solution << std::endl;
-   delete info_container;
-   delete solver_container;
-  
-   std::cout << "AMM rotation " << std::endl << amm_solution.block<3,3>(0,0).transpose() << std::endl;
-   std::cout << "AMM translation: " << std::endl << amm_solution.block<3,1>(0,3) << std::endl;
-   std::cout << "Error rotation: " << (amm_solution.block<3,3>(0,0).transpose() - rotation).norm() << std::endl;
-   std::cout << "Error translation: " << (amm_solution.block<3,1>(0,3) - position).norm() << std::endl;
-   std::cout << "Sol: " << std::endl << amm_solution << std::endl;
-   //std::cout << "Objective function value :" << std::endl;
-   //std::cout << ptr_obj_func->objective_function_value(rot, trans) << std::endl;
-   //std::cout << "Translation grad:" << std::endl;
-   //std::cout << ptr_obj_func->translation_gradient(rot, trans) << std::endl;
-   //std::cout << "Rotation grad: " << std::endl;
-   //std::cout << ptr_obj_func->rotation_gradient(rot, trans) << std::endl;
-   
 }

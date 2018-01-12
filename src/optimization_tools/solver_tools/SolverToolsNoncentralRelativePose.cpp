@@ -112,22 +112,17 @@ opengv::rotation_t SolverToolsNoncentralRelativePose::rotation_solver(opengv::ro
 
 
 
-opengv::translation_t SolverToolsNoncentralRelativePose::translation_solver(const opengv::rotation_t & rotation,
-			    opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function){
+opengv::translation_t SolverToolsNoncentralRelativePose::translation_solver(const opengv::rotation_t & rotation, opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function){
 
-  double alpha = 0.1;
+  double alpha = 0.01;
   double error = 1;
   int k = 0;
   
   opengv::translation_t state = translation;
-  opengv::translation_t grad = Eigen::Vector3d::Zero(3,1);
+  opengv::translation_t grad = info_function->translation_gradient(rotation, state);
   opengv::translation_t new_state = state - alpha * grad;
   while (error > tol ){
-    //grad = gradient_translation(M, rotation, state);
-    grad = info_function->translation_gradient(rotation, state);
     new_state = state - alpha * grad;
-    //double f_obj_current = objective_function(M, rotation, state);
-    //double f_obj_next = objective_function(M, rotation, new_state);
     double f_obj_current = info_function->objective_function_value(rotation, state);
     double f_obj_next = info_function->objective_function_value(rotation, new_state);
 
@@ -135,12 +130,14 @@ opengv::translation_t SolverToolsNoncentralRelativePose::translation_solver(cons
     std::cout << "new state: "     << std::endl     << new_state  << std::endl;
     std::cout << "f(state): "      << f_obj_current << std::endl;
     std::cout << "f(new_state): "  << f_obj_next    << std::endl;
-    std::cout << "gradient:     "  << std::endl     << grad          << std::endl;
+    std::cout << "gradient:     "  << std::endl     << grad       << std::endl;
     std::cout << std::endl         << std::endl     << std::endl;*/
     if(f_obj_next > f_obj_current){
       break;
     }
     error = std::abs(f_obj_current - f_obj_next);
+    grad = info_function->translation_gradient(rotation, state);
+    
     state = new_state;
     k++;
   }

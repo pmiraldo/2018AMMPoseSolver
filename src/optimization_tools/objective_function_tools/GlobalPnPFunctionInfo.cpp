@@ -3,7 +3,7 @@
 #include <opengv/Indices.hpp>
 #include <iostream>
 
-GlobalPnPFunctionInfo::GlobalPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter, const opengv::rotation_t & rot, const opengv::translation_t & trans ){
+GlobalPnPFunctionInfo::GlobalPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter){
 
   opengv::Indices indices(adapter.getNumberCorrespondences());
   int total_points = (int) indices.size();
@@ -16,9 +16,9 @@ GlobalPnPFunctionInfo::GlobalPnPFunctionInfo(const opengv::absolute_pose::Absolu
   //Eigen::MatrixXd Constant = Eigen::MatrixXd::Zero(1,1);
   
   //Variables defined for debugging
-  Eigen::MatrixXd C_all = Eigen::MatrixXd::Zero(3, total_points);
+  /*Eigen::MatrixXd C_all = Eigen::MatrixXd::Zero(3, total_points);
   Eigen::MatrixXd V_all = Eigen::MatrixXd::Zero(3, total_points);
-  Eigen::MatrixXd X_all = Eigen::MatrixXd::Zero(3, total_points);
+  Eigen::MatrixXd X_all = Eigen::MatrixXd::Zero(3, total_points);*/
   Eigen::Matrix3d id = Eigen::Matrix3d::Identity(3,3);
 
   Eigen::Matrix<double,3,1> vi;
@@ -36,9 +36,9 @@ GlobalPnPFunctionInfo::GlobalPnPFunctionInfo(const opengv::absolute_pose::Absolu
     vi = adapter.getCamRotation(indices[i]) * adapter.getBearingVector(indices[i]);
     xi = adapter.getPoint(indices[i]);
     ci = adapter.getCamOffset(indices[i]);
-    //C_all.block<3,1>(0,i) = ci;
-    //X_all.block<3,1>(0,i) = xi;
-    //V_all.block<3,1>(0,i) = vi;
+    /*C_all.block<3,1>(0,i) = ci;
+    X_all.block<3,1>(0,i) = xi;
+    V_all.block<3,1>(0,i) = vi;*/
     Vi = vi * vi.transpose() / (vi.transpose() * vi);
     Qi = (id - Vi).transpose() * (id - Vi);
     
@@ -68,18 +68,18 @@ GlobalPnPFunctionInfo::GlobalPnPFunctionInfo(const opengv::absolute_pose::Absolu
     vr_2.block<1,3>(0,6) = -2 * xi(2,0) * vr_1;
     vr = vr + vr_2.transpose();
   }
-  //std::cout << "Data:" << std::endl;
-  //std::cout << "ci" << std::endl << C_all << std::endl;
-  //std::cout << "xi" << std::endl << X_all << std::endl;
-  //std::cout << "vi" << std::endl << V_all << std::endl;
+  /*std::cout << "Data:" << std::endl;
+  std::cout << "ci" << std::endl << C_all << std::endl;
+  std::cout << "xi" << std::endl << X_all << std::endl;
+  std::cout << "vi" << std::endl << V_all << std::endl;
   
-  //std::cout << "Final results: " << std::endl;
-  //std::cout << "Mt: "  << std::endl << Mt << std::endl;
-  //std::cout << "Mrt: " << std::endl << Mrt << std::endl;
-  //std::cout << "Mr:"   << std::endl << Mr  << std::endl;
-  //std::cout << "vt:"   << std::endl << vt  << std::endl;
-  //std::cout << "vr:"   << std::endl << vr   << std::endl;
-  //std::cout << "Const: " << std::endl << Constant << std::endl;
+  std::cout << "Final results: " << std::endl;
+  std::cout << "Mt: "  << std::endl << Mt << std::endl;
+  std::cout << "Mrt: " << std::endl << Mrt << std::endl;
+  std::cout << "Mr:"   << std::endl << Mr  << std::endl;
+  std::cout << "vt:"   << std::endl << vt  << std::endl;
+  std::cout << "vr:"   << std::endl << vr   << std::endl;
+  std::cout << "Const: " << std::endl << Constant << std::endl;*/
 }
 
 GlobalPnPFunctionInfo::~GlobalPnPFunctionInfo(){};

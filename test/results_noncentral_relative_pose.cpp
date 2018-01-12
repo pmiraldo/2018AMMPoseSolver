@@ -76,7 +76,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
     //set noise
-    double noise = 5;//0.0 + 1 * index;
+    double noise = 0;//0.0 + 1 * index;
     std::cout << std::endl << std::endl << "***************************" << std::endl;
     std::cout << "Noise: " << noise << std::endl;
     Container aux_17points(noise, "17 points");

@@ -74,7 +74,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
 
-    double noise = 0.0 + 1 * index;
+    double noise = 5;//0.0 + 1 * index;
     Container aux_gp3p(noise, "gp3p");
     Container aux_gpnp(noise, "gpnp");
     Container aux_upnp(noise, "upnp");
@@ -210,14 +210,14 @@ int main( int argc, char** argv )
       std::cout << std::endl;
       std::cout << nonlinear_transformation_10 << std::endl << std::endl;
 
-      std::cout << "timings from gp3p algorithm: ";
+      /*std::cout << "timings from gp3p algorithm: ";
       std::cout << gp3p_time << std::endl;
       std::cout << "timings from gpnp algorithm: ";
       std::cout << gpnp_time << std::endl;
       std::cout << "timings from upnp algorithm: ";
       std::cout << upnp_time << std::endl;
       std::cout << "timings from nonlinear algorithm: ";
-      std::cout << nonlinear_time << std::endl;
+      std::cout << nonlinear_time << std::endl;*/
 
       std::cout << "Verification Info" << std::endl;
       
@@ -225,8 +225,8 @@ int main( int argc, char** argv )
       getPerturbedPose( position, rotation, t_perturbed, R_perturbed, 0.1 );
       adapter.sett(t_perturbed);
       adapter.setR(R_perturbed);
-      ObjectiveFunctionInfo * info_container = new GlobalPnPFunctionInfo(adapter, rotation, position);
-      double angle =  M_PI / 90;
+      ObjectiveFunctionInfo * info_container = new GlobalPnPFunctionInfo(adapter);
+      double angle =  M_PI / 180;
       double wx = 0; double wy = 0; double wz = 1;
       Eigen::Matrix3d skew_matrix = Eigen::Matrix3d::Zero(3,3);
       skew_matrix(0,1) = -wz; skew_matrix(0,2) = wy;
@@ -238,8 +238,8 @@ int main( int argc, char** argv )
 
       translation_t error_translation = Eigen::Vector3d::Random(3,1);
       error_translation = 0.2 * error_translation / error_translation.norm();
-      rotation_t rot = error_rotation * rotation; //R_perturbed;
-      translation_t trans = position + error_translation;//t_perturbed;
+      rotation_t rot = R_perturbed.inverse(); //rotation.inverse();
+      translation_t trans = -rot.inverse() * t_perturbed;//position + error_translation;
       //Create solver pointer
       SolverTools * solver_container = NULL;
       solver_container = new SolverToolsNoncentralRelativePose();
@@ -248,23 +248,33 @@ int main( int argc, char** argv )
       double tol = 1e-6;
       transformation_t amm_solution = solver_object.amm_solver( tol, rot, trans, info_container, solver_container);
       gettimeofday(&toc, 0);
+      delete info_container;
+      delete solver_container;
+     
       double time_amm_solution = TIMETODOUBLE(timeval_minus(toc,tic));
       std::cout << "amm solution: " << std::endl;
       std::cout << "perturbed rotation:      " << std::endl << rot << std::endl;
       std::cout << "perturbed translation:   " << std::endl << trans << std::endl;
       std::cout << "given solution:          " << std::endl << amm_solution << std::endl;
-      std::cout << "rotation distance:       " << (rot  - rotation).norm() << std::endl;
-      std::cout << "translation distance:    " << (trans - position).norm() << std::endl;
-      std::cout << "Error rotation (amm):    " << (amm_solution.block<3,3>(0,0) - rotation).norm() << std::endl;
-      std::cout << "Error translation (amm): " << (amm_solution.block<3,1>(0,3) - position).norm() << std::endl;
+      std::cout << "rotation distance:       " << (rot  - rotation.inverse()).norm() << std::endl;
+      std::cout << "translation distance:    " << (trans + rotation.inverse()* position).norm() << std::endl;
+      std::cout << "Error rotation (amm):    " << (amm_solution.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
+      std::cout << "Error translation (amm): " << (amm_solution.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
 
       std::cout << "Error rotation (non lin):    " << (nonlinear_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
       std::cout << "Error translation (non lin): " << (nonlinear_transformation.block<3,1>(0,3) - position).norm() << std::endl;
 
       std::cout << "Error rotation (gpnp):    " << (gpnp_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
       std::cout << "Error translation (gpnp): " << (gpnp_transformation.block<3,1>(0,3) - position).norm() << std::endl;
-      
-      std::cout << "time: "                    << time_amm_solution << std::endl;
+      std::cout << "timings from gp3p algorithm: ";
+      std::cout << gp3p_time << std::endl;
+      std::cout << "timings from gpnp algorithm: ";
+      std::cout << gpnp_time << std::endl;
+      std::cout << "timings from upnp algorithm: ";
+      std::cout << upnp_time << std::endl;
+      std::cout << "timings from nonlinear algorithm: ";
+      std::cout << nonlinear_time << std::endl;
+      std::cout << "time amm: "                    << time_amm_solution << std::endl;
       int size_upnp = upnp_transformations.size();
       bool flag_non_lin  =  aux_nonlinear.validate_transformation( nonlinear_transformation.block<3,3>(0,0), nonlinear_transformation.block<3,1>(0,3));
       bool flag_gpnp       = aux_gpnp.validate_transformation(gpnp_transformation.block<3,3>(0,0), gpnp_transformation.block<3,1>(0,3));

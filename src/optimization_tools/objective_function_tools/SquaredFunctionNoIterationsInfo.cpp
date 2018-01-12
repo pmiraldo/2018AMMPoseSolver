@@ -56,7 +56,7 @@ SquaredFunctionNoIterationsInfo::SquaredFunctionNoIterationsInfo(const opengv::r
     << l2(3,0) << " " << l2(4,0) << " " << l2(5,0) << std::endl;*/
      M = M + (vector_data * vector_data.transpose());
    }
-   std::cout << "M matrix: " << std::endl << M << std::endl;
+   //std::cout << "M matrix: " << std::endl << M << std::endl;
 
    v = Eigen::MatrixXd::Zero(18,1);
 }
