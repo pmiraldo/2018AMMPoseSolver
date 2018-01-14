@@ -36,6 +36,7 @@
 #include <opengv/absolute_pose/methods.hpp>
 #include <opengv/absolute_pose/NoncentralAbsoluteAdapter.hpp>
 #include <opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp>
+#include <opengv/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.hpp>
 #include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
 #include <sstream>
 #include <fstream>
@@ -74,7 +75,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
 
-    double noise = 5;//0.0 + 1 * index;
+    double noise = 0;//0.0 + 1 * index;
     Container aux_gp3p(noise, "gp3p");
     Container aux_gpnp(noise, "gpnp");
     Container aux_upnp(noise, "upnp");
@@ -290,6 +291,23 @@ int main( int argc, char** argv )
           index_stat++;
       }
       total_realizations++;
+      std::cout << "Test the new objective function:" << std::endl;
+      rotation_t rot_1 = rotation.inverse(); //rotation.inverse();
+      translation_t trans_1 = -rot_1 * position;
+      ObjectiveFunctionInfo * tester = new OptimalUPnPFunctionInfo(adapter, rot_1, trans_1);
+      SolverTools * solver_tester = NULL;
+      solver_tester = new SolverToolsNoncentralRelativePose();
+      amm solver_object_tester;
+      gettimeofday(&tic,0);
+      
+      transformation_t amm_solution_tester = solver_object_tester.amm_solver( tol, rot_1, trans_1, tester, solver_tester);
+      gettimeofday(&toc, 0);
+      double time_amm_solution_tester = TIMETODOUBLE(timeval_minus(toc,tic));
+      delete solver_tester;
+      delete tester;
+      std::cout << "Error rotation (amm) tester:    " << (amm_solution_tester.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
+      std::cout << "Error translation (amm): " << (amm_solution_tester.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
+      std::cout << "AMM time tester: " << time_amm_solution_tester << std::endl;
     }
     Statistic_info aux(noise, index_stat, total_realizations);
     information_statistics.push_back(aux);

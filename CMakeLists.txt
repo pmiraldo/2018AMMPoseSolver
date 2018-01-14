@@ -136,7 +136,8 @@ set( OPENGV_SOURCE_FILES
   src/optimization_tools/objective_function_tools/SquaredFunctionInfo.cpp
   src/optimization_tools/objective_function_tools/SquaredFunctionNoIterationsInfo.cpp
   src/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.cpp
-
+  src/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.cpp
+  
   #amm
   src/amm.cpp
 
@@ -198,6 +199,7 @@ set( OPENGV_HEADER_FILES
   include/opengv/optimization_tools/objective_function_tools/SquaredFunctionInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/SquaredFunctionNoIterationsInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.hpp
   #amm
   include/opengv/amm.hpp
   #supporting files
