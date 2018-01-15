@@ -14,7 +14,7 @@ public:
 				      const opengv::rotation_t & initial_state,
 				      const opengv::translation_t & initial_translation,
 				      ObjectiveFunctionInfo * objective_function_container,
-				      SolverTools * solver_container);
+				      SolverTools * solver_container, double & step);
  
 }; 
 #endif

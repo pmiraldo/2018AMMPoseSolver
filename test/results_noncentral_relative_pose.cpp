@@ -260,7 +260,8 @@ int main( int argc, char** argv )
       solver_container = new SolverToolsNoncentralRelativePose();
       amm solver_object;
       gettimeofday(&tic,0);
-      transformation_t amm_solution = solver_object.amm_solver( tol, initial_rotation, initial_translation, info_container, solver_container);
+      double step = 0.01;
+      transformation_t amm_solution = solver_object.amm_solver( tol, initial_rotation, initial_translation, info_container, solver_container, step);
       gettimeofday(&toc, 0);
       double time_amm_solution = TIMETODOUBLE(timeval_minus(toc,tic)); //  / iterations;
 
@@ -273,7 +274,7 @@ int main( int argc, char** argv )
       transformation_t amm_solution_noiterations = solver_object.amm_solver( tol, initial_rotation,
 									          initial_translation,
 									          info_container_noiterations,
-									          solver_container);
+									     solver_container, step);
       gettimeofday(&toc, 0);
       double time_amm_solution_noiterations = TIMETODOUBLE(timeval_minus(toc,tic)); //  / iterations;
 

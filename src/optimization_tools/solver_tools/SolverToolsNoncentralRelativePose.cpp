@@ -112,17 +112,19 @@ opengv::rotation_t SolverToolsNoncentralRelativePose::rotation_solver(opengv::ro
 
 
 
-opengv::translation_t SolverToolsNoncentralRelativePose::translation_solver(const opengv::rotation_t & rotation, opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function){
+opengv::translation_t SolverToolsNoncentralRelativePose::translation_solver(const opengv::rotation_t & rotation, opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double & step){
 
-  double alpha = 0.01;
+ 
   double error = 1;
   int k = 0;
-  
+  //std::cout << "Translation gradient: " << std::endl;
   opengv::translation_t state = translation;
   opengv::translation_t grad = info_function->translation_gradient(rotation, state);
-  opengv::translation_t new_state = state - alpha * grad;
+  opengv::translation_t new_state = state - step * grad;
+  //std::cout << "Beginning of the translation solver: " << std::endl;
+  //std::cout << "The rotation used is: " << std::endl << rotation << std::endl;
   while (error > tol ){
-    new_state = state - alpha * grad;
+    new_state = state - step * grad;
     double f_obj_current = info_function->objective_function_value(rotation, state);
     double f_obj_next = info_function->objective_function_value(rotation, new_state);
 

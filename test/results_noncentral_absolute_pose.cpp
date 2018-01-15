@@ -75,7 +75,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
 
-    double noise = 0;//0.0 + 1 * index;
+    double noise = 3;//0.0 + 1 * index;
     Container aux_gp3p(noise, "gp3p");
     Container aux_gpnp(noise, "gpnp");
     Container aux_upnp(noise, "upnp");
@@ -240,14 +240,15 @@ int main( int argc, char** argv )
       translation_t error_translation = Eigen::Vector3d::Random(3,1);
       error_translation = 0.2 * error_translation / error_translation.norm();
       rotation_t rot = R_perturbed.inverse(); //rotation.inverse();
-      translation_t trans = -rot.inverse() * t_perturbed;//position + error_translation;
+      translation_t trans = -R_perturbed.inverse() * t_perturbed;//position + error_translation;
       //Create solver pointer
       SolverTools * solver_container = NULL;
       solver_container = new SolverToolsNoncentralRelativePose();
       amm solver_object;
       gettimeofday(&tic,0);
       double tol = 1e-6;
-      transformation_t amm_solution = solver_object.amm_solver( tol, rot, trans, info_container, solver_container);
+      double step = 0.008;
+      transformation_t amm_solution = solver_object.amm_solver( tol, rot, trans, info_container, solver_container, step);
       gettimeofday(&toc, 0);
       delete info_container;
       delete solver_container;
@@ -291,23 +292,33 @@ int main( int argc, char** argv )
           index_stat++;
       }
       total_realizations++;
-      std::cout << "Test the new objective function:" << std::endl;
-      rotation_t rot_1 = rotation.inverse(); //rotation.inverse();
-      translation_t trans_1 = -rot_1 * position;
-      ObjectiveFunctionInfo * tester = new OptimalUPnPFunctionInfo(adapter, rot_1, trans_1);
-      SolverTools * solver_tester = NULL;
-      solver_tester = new SolverToolsNoncentralRelativePose();
+      ObjectiveFunctionInfo * tester = new OptimalUPnPFunctionInfo(adapter, rotation.inverse(), -rotation.inverse() * position);
+      /*std::cout << "For the pair (R_,t_): " << std::endl << rotation.inverse() << std::endl << -rotation.inverse() * position << std::endl;
+      std::cout << "objective function value" << std::endl << tester->objective_function_value(rotation.inverse(), -rotation.inverse() * position) << std::endl;
+      std::cout << "gradient translation" << std::endl << tester->translation_gradient(rotation.inverse(), -rotation.inverse() * position) << std::endl;
+      std::cout << "gradient rotation" << std::endl << tester->rotation_gradient(rotation.inverse(), -rotation.inverse() * position) << std::endl;
+      rotation_t rot_tester = R_perturbed.inverse();
+      translation_t trans_tester = - rot_tester * t_perturbed;
+      std::cout << "For the pair (R_,t_): " << std::endl << rot_tester << std::endl << std::endl << trans_tester << std::endl;
+      std::cout << "objective function value" << std::endl << tester->objective_function_value(rot_tester, trans_tester) << std::endl;
+      std::cout << "gradient translation" << std::endl <<
+	tester->translation_gradient(rot_tester, trans_tester) << std::endl;
+      std::cout << "gradient rotation" << std::endl <<
+      tester->rotation_gradient(rot_tester, trans_tester) << std::endl;*/
+      SolverTools * solver_container_tester = NULL;
+      solver_container_tester = new SolverToolsNoncentralRelativePose();
       amm solver_object_tester;
+      step = 0.0051;
       gettimeofday(&tic,0);
-      
-      transformation_t amm_solution_tester = solver_object_tester.amm_solver( tol, rot_1, trans_1, tester, solver_tester);
+      transformation_t amm_solution_tester = solver_object_tester.amm_solver( tol, rot, trans, tester, solver_container_tester, step);
       gettimeofday(&toc, 0);
-      double time_amm_solution_tester = TIMETODOUBLE(timeval_minus(toc,tic));
-      delete solver_tester;
       delete tester;
-      std::cout << "Error rotation (amm) tester:    " << (amm_solution_tester.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
-      std::cout << "Error translation (amm): " << (amm_solution_tester.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
-      std::cout << "AMM time tester: " << time_amm_solution_tester << std::endl;
+      delete solver_container_tester;
+     
+      double time_amm_solution_tester = TIMETODOUBLE(timeval_minus(toc,tic));
+      std::cout << "Error rotation tester (amm):    " << (amm_solution_tester.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
+      std::cout << "Error translation tester (amm): " << (amm_solution_tester.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
+      std::cout << "time amm tester: "                    << time_amm_solution_tester << std::endl;
     }
     Statistic_info aux(noise, index_stat, total_realizations);
     information_statistics.push_back(aux);

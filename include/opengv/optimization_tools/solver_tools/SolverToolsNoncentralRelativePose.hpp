@@ -11,6 +11,6 @@ public:
                                      double &tol, ObjectiveFunctionInfo * info_function);
 
   opengv::translation_t translation_solver(const opengv::rotation_t & rotation,
-                                           opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function);
+                                           opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double &step);
 
 };

@@ -16,7 +16,7 @@ class SolverTools{
 					     double &tol, ObjectiveFunctionInfo * info_function) = 0;
 
   virtual opengv::translation_t translation_solver(const opengv::rotation_t & rotation,
-						   opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function) = 0;
+						   opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double &step) = 0;
 
 };
 

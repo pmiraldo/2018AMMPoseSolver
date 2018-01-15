@@ -12,7 +12,7 @@ opengv::transformation_t amm::amm_solver(double & tol,
                                       const opengv::rotation_t & initial_state,
                                       const opengv::translation_t & initial_translation,
                                       ObjectiveFunctionInfo * objective_function_container,
-				      SolverTools * solver_container){
+					 SolverTools * solver_container, double & step){
   double error = 1;
   int max = 100;
   int iteration = 0;
@@ -20,17 +20,18 @@ opengv::transformation_t amm::amm_solver(double & tol,
   opengv::translation_t translation = initial_translation;
   opengv::rotation_t previous_state = initial_state;
   double tol_solvers = 1e-6;
+  std::cout << "Beginning of the amm" << std::endl;
   while (error > tol && iteration < max){
     previous_state = state;
     //minimize rotation state
-   
+    //std::cout << "Iteration: " << iteration << std::endl;
     state = solver_container->rotation_solver(state, translation, tol_solvers, objective_function_container);
 
     /*std::cout << "New rotation: "              << std::endl << state       << std::endl;
       std::cout << "The translation: "           << std::endl << translation << std::endl;*/
-    translation = solver_container->translation_solver(state, translation, tol_solvers, objective_function_container);
-    /*std::cout << "New translation: "           << std::endl << translation << std::endl;
-      std::cout << "End of iteration: " << std::endl;*/
+      translation = solver_container->translation_solver(state, translation, tol_solvers, objective_function_container, step);
+      /*std::cout << "New translation: "           << std::endl << translation << std::endl;
+	std::cout << "End of iteration: " << std::endl;*/
    
     error = (previous_state - state).norm();
     iteration++;

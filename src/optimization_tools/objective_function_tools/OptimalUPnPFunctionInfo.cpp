@@ -3,7 +3,7 @@
 #include <opengv/Indices.hpp>
 #include <iostream>
 
-OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter, const opengv::rotation_t &rot, const opengv::translation_t &trans){
+OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter, opengv::rotation_t rot, opengv::translation_t trans){
   //Initialize class members
   Mr  = Eigen::MatrixXd::Zero(9,9);
   vr  = Eigen::MatrixXd::Zero(9,1);;
@@ -61,7 +61,8 @@ OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::Ab
     u_total = U.block(i,0, 1, 3 * n);
     double internal_coefficient = 0;
     Eigen::MatrixXd internal_vector = Eigen::MatrixXd::Zero(1,9);
-   
+    D = Eigen::MatrixXd::Zero(3,9);
+    v = Eigen::MatrixXd::Zero(3,1);
     for(int j = 0; j < n; ++j){
       uij = u_total.block(0, 3 * j , 1, 3);
       pj = X_all.block<3,1>(0, j);
@@ -80,11 +81,16 @@ OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::Ab
     Dr_i.block<3,3>(0,3) = pi(1,0) * Eigen::MatrixXd::Identity(3,3);
     Dr_i.block<3,3>(0,6) = pi(2,0) * Eigen::MatrixXd::Identity(3,3);
     D = D - Dr_i;
- 
-    v = v + vi - fi * internal_coefficient;
+    v = vi - fi * internal_coefficient;
+    
+    Mr  = Mr  + D.transpose() * D;
+    Mrt = Mrt - 2 * D.transpose();
+    vr  = vr  + 2 * D.transpose() * v;
+    vt  = vt  - 2 * v;
+    constant = constant + v.transpose() * v;
   }
   
-  /*Eigen::MatrixXd r = Eigen::MatrixXd::Zero(9,1);
+  Eigen::MatrixXd r = Eigen::MatrixXd::Zero(9,1);
   r(0,0) = rot(0,0);
   r(1,0) = rot(1,0);
   r(2,0) = rot(2,0);
@@ -93,25 +99,18 @@ OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::Ab
   r(5,0) = rot(2,1);
   r(6,0) = rot(0,2);
   r(7,0) = rot(1,2);
-  r(8,0) = rot(2,2);*/
-  //std::cout << "Matrix D:     " << std::endl << D << std::endl;
-  //std::cout << "Vector const: " << std::endl << v << std::endl;
-  //std::cout << "residual:     " << std::endl << (D * r - n * trans + v) << std::endl;
-
-  Mr  = D.transpose() * D;
-  vr  = 2 * D.transpose() * v;
-  Mrt = -2 * n * D.transpose();
-  vt  = -2 * n * v;
-  constant = v.transpose() * v;
-
+  r(8,0) = rot(2,2);
+ 
   //std::cout << "The squared residual: " << std::endl;
-  //std::cout << (r.transpose() * Mr * r + vr.transpose() * r + r.transpose() * Mrt * trans + vt.transpose() * trans + constant + (n * n) * trans.transpose() * trans) << std::endl;
-  /*std::cout << "Mr:  "      << std::endl << Mr << std::endl;
-  std::cout << "vr:  "      << std::endl << vr << std::endl;
-  std::cout << "Mrt: "      << std::endl << Mrt << std::endl;
-  std::cout << "vt:  "      << std::endl << vt << std::endl;
-  std::cout << "n:   "      << std::endl << n  << std::endl;
-  std::cout << "constant: " << std::endl << constant << std::endl;*/
+  //std::cout << (r.transpose() * Mr * r + vr.transpose() * r + r.transpose() * Mrt * trans + vt.transpose() * trans + constant + n * trans.transpose() * trans) << std::endl;
+  /*std::cout << "Mr:  "      << std::endl << Mr       << std::endl;
+  std::cout << "vr:  "      << std::endl << vr       << std::endl;
+  std::cout << "Mrt: "      << std::endl << Mrt      << std::endl;
+  std::cout << "vt:  "      << std::endl << vt       << std::endl;
+  std::cout << "n:   "      << std::endl << n        << std::endl;
+  std::cout << "constant: " << std::endl << constant << std::endl;
+  std::cout << "R_: "       << std::endl << rot      << std::endl;
+  std::cout << "t_: "       << std::endl << trans    << std::endl;*/ 
 }
 
 OptimalUPnPFunctionInfo::~OptimalUPnPFunctionInfo(){};
@@ -119,12 +118,8 @@ OptimalUPnPFunctionInfo::~OptimalUPnPFunctionInfo(){};
 double OptimalUPnPFunctionInfo::objective_function_value(const opengv::rotation_t & rotation, const opengv::translation_t & translation){
   const double * p = &rotation(0);
   Map<const Matrix<double,1,9> > r(p, 1, 9);
-  Eigen::MatrixXd e = (r * Mr * r.transpose() )
-    + vr.transpose() * r.transpose()
-    + r * Mrt * translation
-    + (n * n) * translation.transpose() * translation
-    + vt.transpose() * translation;
-  return ( e(0,0));
+  Eigen::MatrixXd e = (r * Mr * r.transpose() + vr.transpose() * r.transpose() + r * Mrt * translation + vt.transpose() * translation + n * translation.transpose() * translation);
+  return ( e(0,0) );
 }
 
 opengv::rotation_t OptimalUPnPFunctionInfo::rotation_gradient(const opengv::rotation_t & rotation, const opengv::translation_t & translation){
@@ -133,11 +128,11 @@ opengv::rotation_t OptimalUPnPFunctionInfo::rotation_gradient(const opengv::rota
   Eigen::MatrixXd result = (2 * Mr * r.transpose()) + ( Mrt * translation ) + vr;
   double * ptr = &result(0);
   Map<Matrix<double, 3,3> > m(ptr, 3, 3);
-  return m;
+  return m ;
 }
 
 opengv::translation_t OptimalUPnPFunctionInfo::translation_gradient(const opengv::rotation_t & rotation, const opengv::translation_t & translation){
   const double * p = &rotation(0);
   Map<const Matrix<double,1,9> > r(p, 1, 9);
-  return ( (r * Mrt).transpose()  + (2 * n * n) * translation + vt);
+  return (  2 * n * translation + Mrt.transpose() * r.transpose() + vt )  ;
 }
