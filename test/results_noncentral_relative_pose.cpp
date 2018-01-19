@@ -76,7 +76,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
     //set noise
-    double noise = 0;//0.0 + 1 * index;
+    double noise = 8;//0.0 + 1 * index;
     std::cout << std::endl << std::endl << "***************************" << std::endl;
     std::cout << "Noise: " << noise << std::endl;
     Container aux_17points(noise, "17 points");
@@ -297,19 +297,34 @@ int main( int argc, char** argv )
       std::cout << (amm_solution.block<3,3>(0,0) - rotation).norm() << std::endl;
       std::cout << "Time: " << time_amm_solution << std::endl;
 
-      std::cout << "Error AMM no iterations: "           << std::endl;
-      std::cout << (amm_solution_noiterations.block<3,3>(0,0) - rotation).norm() << std::endl;
-      std::cout << "Time: " << time_amm_solution_noiterations << std::endl;
+      std::cout << "Error AMM no iterations: "  << (amm_solution_noiterations.block<3,3>(0,0)  - rotation).norm() << std::endl;
+      std::cout << "Error 17: "                 << (seventeenpt_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
+      std::cout << "Error nonlin: "             << (nonlinear_transformation.block<3,3>(0,0)   - rotation).norm() << std::endl;
+      std::cout << "Error GE: "                 << (ge_transformation.block<3,3>(0,0)          - rotation).norm() << std::endl;
 
-      std::cout << "Error 17: " << std::endl;
-      std::cout << (seventeenpt_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
-      std::cout << "Time: " << seventeenpt_time_all << std::endl;
-      std::cout << "Error nonlin: " << std::endl;
-      std::cout << (nonlinear_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
-      std::cout << "Time: " << nonlinear_time << std::endl;
-      std::cout << "GE: " << std::endl;
-      std::cout << (ge_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
-      std::cout << "Time: " << ge_time << std::endl;
+
+      std::cout << "Time 17 points: "  << seventeenpt_time_all           << std::endl;
+      std::cout << "Time non linear: " << nonlinear_time                 << std::endl;
+      std::cout << "Time ge: "         << ge_time                        << std::endl;
+      std::cout << "Time: "            << time_amm_solution_noiterations << std::endl;
+      
+      std::cout << "Error AMM no iterations:translation "           << std::endl;
+      std::cout << (amm_solution_noiterations.block<3,1>(0,3) - position).norm() << std::endl;
+     
+      std::cout << "Error 17 translation: " << std::endl;
+      std::cout << (seventeenpt_transformation.block<3,1>(0,3) - position).norm() << std::endl;
+     
+      std::cout << "Error nonlin translation traslation" << std::endl;
+      std::cout << (nonlinear_transformation.block<3,1>(0,3) - position).norm() << std::endl;
+     
+      std::cout << "GE translation:" << std::endl;
+      std::cout << (ge_transformation.block<3,1>(0,3) - position).norm() << std::endl;
+    
+
+
+
+
+      
 
       bool flag_non_lin  =  aux_nonlinear.validate_transformation( nonlinear_transformation.block<3,3>(0,0),
                                                                 nonlinear_transformation.block<3,1>(0,3));

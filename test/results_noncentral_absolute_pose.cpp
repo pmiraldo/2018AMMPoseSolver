@@ -37,6 +37,7 @@
 #include <opengv/absolute_pose/NoncentralAbsoluteAdapter.hpp>
 #include <opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp>
 #include <opengv/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.hpp>
+#include <opengv/optimization_tools/objective_function_tools/GlobalPnPInfiniteNormFunctionInfo.hpp>
 #include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
 #include <sstream>
 #include <fstream>
@@ -75,7 +76,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
 
-    double noise = 3;//0.0 + 1 * index;
+    double noise = 0;//0.0 + 1 * index;
     Container aux_gp3p(noise, "gp3p");
     Container aux_gpnp(noise, "gpnp");
     Container aux_upnp(noise, "upnp");
@@ -293,18 +294,6 @@ int main( int argc, char** argv )
       }
       total_realizations++;
       ObjectiveFunctionInfo * tester = new OptimalUPnPFunctionInfo(adapter, rotation.inverse(), -rotation.inverse() * position);
-      /*std::cout << "For the pair (R_,t_): " << std::endl << rotation.inverse() << std::endl << -rotation.inverse() * position << std::endl;
-      std::cout << "objective function value" << std::endl << tester->objective_function_value(rotation.inverse(), -rotation.inverse() * position) << std::endl;
-      std::cout << "gradient translation" << std::endl << tester->translation_gradient(rotation.inverse(), -rotation.inverse() * position) << std::endl;
-      std::cout << "gradient rotation" << std::endl << tester->rotation_gradient(rotation.inverse(), -rotation.inverse() * position) << std::endl;
-      rotation_t rot_tester = R_perturbed.inverse();
-      translation_t trans_tester = - rot_tester * t_perturbed;
-      std::cout << "For the pair (R_,t_): " << std::endl << rot_tester << std::endl << std::endl << trans_tester << std::endl;
-      std::cout << "objective function value" << std::endl << tester->objective_function_value(rot_tester, trans_tester) << std::endl;
-      std::cout << "gradient translation" << std::endl <<
-	tester->translation_gradient(rot_tester, trans_tester) << std::endl;
-      std::cout << "gradient rotation" << std::endl <<
-      tester->rotation_gradient(rot_tester, trans_tester) << std::endl;*/
       SolverTools * solver_container_tester = NULL;
       solver_container_tester = new SolverToolsNoncentralRelativePose();
       amm solver_object_tester;
@@ -319,6 +308,23 @@ int main( int argc, char** argv )
       std::cout << "Error rotation tester (amm):    " << (amm_solution_tester.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
       std::cout << "Error translation tester (amm): " << (amm_solution_tester.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
       std::cout << "time amm tester: "                    << time_amm_solution_tester << std::endl;
+
+      std::cout << "Test new infinity norm function: " << std::endl;
+      ObjectiveFunctionInfo * infinity_norm = new GlobalPnPInfiniteNormFunctionInfo(adapter, rotation.inverse(), -rotation.inverse() * position);
+      std::cout << "END OF CONSTRUCTOR" << std::endl << std::endl;
+      std::cout << "Objective function values: " << std::endl;
+      double fun = infinity_norm->objective_function_value(rotation.inverse(), -rotation.inverse() * position);
+      std::cout << "Returned value: "                        << fun << std::endl << std::endl;
+      std::cout << "The rotation gradient: "    << std::endl << infinity_norm->rotation_gradient(rotation.inverse(), -rotation.inverse() * position) << std::endl << std::endl;
+      std::cout << "The translation gradient: " << std::endl << infinity_norm->translation_gradient(rotation.inverse(), -rotation.inverse() * position) << std::endl;
+      std::cout << std::endl << std::endl << std::endl;
+      std::cout << "R_" << std::endl << rotation << std::endl << std::endl;
+      std::cout << "t_" << std::endl << position << std::endl << std::endl;
+      fun = infinity_norm->objective_function_value(rotation,  position);
+      std::cout << "Returned value: "                        << fun << std::endl << std::endl;
+      std::cout << "The rotation gradient: "    << std::endl << infinity_norm->rotation_gradient(rotation, position) << std::endl << std::endl;
+      std::cout << "The translation gradient: " << std::endl << infinity_norm->translation_gradient(rotation, position) << std::endl;
+      delete infinity_norm;
     }
     Statistic_info aux(noise, index_stat, total_realizations);
     information_statistics.push_back(aux);
