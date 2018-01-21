@@ -8,7 +8,7 @@ GlobalPnPInfiniteNormFunctionInfo::GlobalPnPInfiniteNormFunctionInfo(const openg
   Eigen::Matrix3d Vi  = Eigen::MatrixXd::Zero(3,3);
   Eigen::Matrix3d id  = Eigen::MatrixXd::Identity(3,3);
   opengv::Indices indices(adapter.getNumberCorrespondences());
-  int total_points = 5;//(int) indices.size();
+  int total_points = (int) indices.size();
   //std::cout << "Total points: " << total_points << std::endl;
   Eigen::MatrixXd vi     = Eigen::MatrixXd::Zero(3,1);
   Eigen::MatrixXd xi     = Eigen::MatrixXd::Zero(3,1);
@@ -43,7 +43,7 @@ GlobalPnPInfiniteNormFunctionInfo::GlobalPnPInfiniteNormFunctionInfo(const openg
 
     //Initialize list of objective functions
     wi = rotation * xi + translation - ci;
-    std::cout << "wi: " << std::endl << wi << std::endl;
+    //std::cout << "wi: " << std::endl << wi << std::endl;
     result = wi.transpose() *  Qi * wi;
     function[i] = result(0,0);
 
@@ -51,13 +51,13 @@ GlobalPnPInfiniteNormFunctionInfo::GlobalPnPInfiniteNormFunctionInfo(const openg
     Mr.block<3,3>(0,0) = xi(0,0) * Eigen::MatrixXd::Identity(3,3);
     Mr.block<3,3>(0,3) = xi(1,0) * Eigen::MatrixXd::Identity(3,3);
     Mr.block<3,3>(0,6) = xi(2,0) * Eigen::MatrixXd::Identity(3,3);
-    coefs_gradients.block<9,9>(0,0) = 2 * Mr.transpose() * Qi * Mr;
+    coefs_gradients.block<9,9>(0,0) = Mr.transpose() * Qi * Mr;
     coefs_gradients.block<9,3>(0,9) = 2 * Mr.transpose() * Qi;
     coefs_gradients.block<9,1>(0,12) = -2 * Mr.transpose() * Qi * ci;
     matrix_gradients.push_back(coefs_gradients);
   }
 
-  std::cout << "ci"   << std::endl << C_all       << std::endl;
+  /*std::cout << "ci"   << std::endl << C_all       << std::endl;
   std::cout << "xi"   << std::endl << X_all       << std::endl;
   std::cout << "vi"   << std::endl << V_all       << std::endl;
   std::cout << "R_: " << std::endl << rotation    << std::endl;
@@ -70,7 +70,7 @@ GlobalPnPInfiniteNormFunctionInfo::GlobalPnPInfiniteNormFunctionInfo(const openg
   }
   for(auto it = function.cbegin(); it != function.cend(); ++it){
     std::cout << it->first << " " << it->second << "\n";
-  }
+    }*/
  
 }
 
@@ -95,9 +95,9 @@ double GlobalPnPInfiniteNormFunctionInfo::objective_function_value(const opengv:
   //for(auto it = function.cbegin(); it != function.cend(); ++it){
   //  std::cout << it->first << " " << it->second << "\n";
   //}
-  std::cout << std::endl << std::endl;
+  
   min_key = pr->first;
-  std::cout << "MIN KEY: " << min_key << std::endl;
+  //std::cout << "MIN KEY: " << min_key << std::endl;
   return (pr->second);
 }
 
@@ -109,7 +109,7 @@ opengv::rotation_t GlobalPnPInfiniteNormFunctionInfo::rotation_gradient(const op
 
   const double * p = &rotation(0);
   Map<const Matrix<double,1,9> > r(p, 1, 9);
-  Eigen::MatrixXd grad_r = Mr * r.transpose() + Mrt * translation + vr;
+  Eigen::MatrixXd grad_r = (2 * Mr * r.transpose()) + Mrt * translation + vr;
   double * ptr = &grad_r(0);
   Map<Matrix<double, 3,3> > m(ptr, 3, 3);
   return m;

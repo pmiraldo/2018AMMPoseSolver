@@ -20,7 +20,7 @@ opengv::transformation_t amm::amm_solver(double & tol,
   opengv::translation_t translation = initial_translation;
   opengv::rotation_t previous_state = initial_state;
   double tol_solvers = 1e-6;
-  std::cout << "Beginning of the amm" << std::endl;
+  //std::cout << "Beginning of the amm" << std::endl;
   while (error > tol && iteration < max){
     previous_state = state;
     //minimize rotation state

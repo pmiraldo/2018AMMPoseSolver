@@ -76,7 +76,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
 
-    double noise = 0;//0.0 + 1 * index;
+    double noise = 2;//0.0 + 1 * index;
     Container aux_gp3p(noise, "gp3p");
     Container aux_gpnp(noise, "gpnp");
     Container aux_upnp(noise, "upnp");
@@ -298,6 +298,11 @@ int main( int argc, char** argv )
       solver_container_tester = new SolverToolsNoncentralRelativePose();
       amm solver_object_tester;
       step = 0.0051;
+      getPerturbedPose( position, rotation, t_perturbed, R_perturbed, 0.1 );
+      adapter.sett(t_perturbed);
+      adapter.setR(R_perturbed);
+      rot = R_perturbed.inverse();
+      trans = -rot * t_perturbed;
       gettimeofday(&tic,0);
       transformation_t amm_solution_tester = solver_object_tester.amm_solver( tol, rot, trans, tester, solver_container_tester, step);
       gettimeofday(&toc, 0);
@@ -305,13 +310,26 @@ int main( int argc, char** argv )
       delete solver_container_tester;
      
       double time_amm_solution_tester = TIMETODOUBLE(timeval_minus(toc,tic));
+      std::cout << "Error start rotation: " << std::endl << (rot - rotation.inverse()).norm() << std::endl;
+      std::cout << "Error start rotation: " << std::endl << (trans + rotation.inverse()*position).norm() << std::endl;
       std::cout << "Error rotation tester (amm):    " << (amm_solution_tester.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
       std::cout << "Error translation tester (amm): " << (amm_solution_tester.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
       std::cout << "time amm tester: "                    << time_amm_solution_tester << std::endl;
-
-      std::cout << "Test new infinity norm function: " << std::endl;
-      ObjectiveFunctionInfo * infinity_norm = new GlobalPnPInfiniteNormFunctionInfo(adapter, rotation.inverse(), -rotation.inverse() * position);
-      std::cout << "END OF CONSTRUCTOR" << std::endl << std::endl;
+      amm solver_object_infinite_norm;
+      ObjectiveFunctionInfo * infinity_norm = new GlobalPnPInfiniteNormFunctionInfo(adapter, R_perturbed.inverse(), -R_perturbed.inverse() * t_perturbed);
+      SolverTools * solver_container_infinite_norm = NULL;
+      solver_container_infinite_norm = new SolverToolsNoncentralRelativePose();
+      step = 0.45;
+      gettimeofday(&tic,0);
+      transformation_t amm_solution_infinite_norm = solver_object_infinite_norm.amm_solver( tol, rot, trans, infinity_norm, solver_container_infinite_norm, step);
+      gettimeofday(&toc,0);
+      double time_amm_solution_infinite_norm = TIMETODOUBLE(timeval_minus(toc,tic));
+      std::cout << "Error start rotation: " << std::endl << (rot - rotation.inverse()).norm() << std::endl;
+      std::cout << "Error start rotation: " << std::endl << (trans + rotation.inverse()*position).norm() << std::endl;
+      std::cout << "Error rotation infinite (amm):    " << (amm_solution_infinite_norm.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
+      std::cout << "Error translation infinite (amm): " << (amm_solution_infinite_norm.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
+      std::cout << "time amm infinite: "                    << time_amm_solution_infinite_norm << std::endl;
+      /*std::cout << "END OF CONSTRUCTOR" << std::endl << std::endl;
       std::cout << "Objective function values: " << std::endl;
       double fun = infinity_norm->objective_function_value(rotation.inverse(), -rotation.inverse() * position);
       std::cout << "Returned value: "                        << fun << std::endl << std::endl;
@@ -323,7 +341,8 @@ int main( int argc, char** argv )
       fun = infinity_norm->objective_function_value(rotation,  position);
       std::cout << "Returned value: "                        << fun << std::endl << std::endl;
       std::cout << "The rotation gradient: "    << std::endl << infinity_norm->rotation_gradient(rotation, position) << std::endl << std::endl;
-      std::cout << "The translation gradient: " << std::endl << infinity_norm->translation_gradient(rotation, position) << std::endl;
+      std::cout << "The translation gradient: " << std::endl << infinity_norm->translation_gradient(rotation, position) << std::endl;*/
+      delete solver_container_infinite_norm;
       delete infinity_norm;
     }
     Statistic_info aux(noise, index_stat, total_realizations);
