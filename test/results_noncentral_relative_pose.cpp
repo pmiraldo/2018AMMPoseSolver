@@ -60,8 +60,8 @@ int main( int argc, char** argv )
 {
   // initialize random seed
   initializeRandomSeed();
-  int n_experiments = 1;//10;
-  int noise_levels = 1;//4;
+  int n_experiments = 10;
+  int noise_levels = 4;
 
   //set experiment parameters
   double noise = 0.0;
@@ -76,7 +76,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
     //set noise
-    double noise = 8;//0.0 + 1 * index;
+    double noise = 0.0 + 1 * index;
     std::cout << std::endl << std::endl << "***************************" << std::endl;
     std::cout << "Noise: " << noise << std::endl;
     Container aux_17points(noise, "17 points");

@@ -76,7 +76,7 @@ int main( int argc, char** argv )
   std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
 
-    double noise = 2;//0.0 + 1 * index;
+    double noise = 0;//0.0 + 1 * index;
     Container aux_gp3p(noise, "gp3p");
     Container aux_gpnp(noise, "gpnp");
     Container aux_upnp(noise, "upnp");
@@ -320,6 +320,7 @@ int main( int argc, char** argv )
       SolverTools * solver_container_infinite_norm = NULL;
       solver_container_infinite_norm = new SolverToolsNoncentralRelativePose();
       step = 0.45;
+      tol = 1e-15;
       gettimeofday(&tic,0);
       transformation_t amm_solution_infinite_norm = solver_object_infinite_norm.amm_solver( tol, rot, trans, infinity_norm, solver_container_infinite_norm, step);
       gettimeofday(&toc,0);
