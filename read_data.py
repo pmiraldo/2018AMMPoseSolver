@@ -13,7 +13,7 @@ def plot_info(full_data, x_axis, y_axis, title):
                     color=colors[clr], marker=None, linestyle='-')
         clr = clr + 1
    
-    plt.title(title, fontsize= 22)
+    plt.title(title, fontsize= 28, fontweight="bold")
     plt.xlabel(x_axis, fontsize= 22)
     plt.ylabel(y_axis, fontsize= 22)
     plt.legend(fontsize=15)
