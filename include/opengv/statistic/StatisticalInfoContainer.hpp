@@ -13,7 +13,7 @@ class StatisticalInfoContainer{
   StatisticalInfoContainer(double noise_level_, std::string method_name_, double rotation_error_, double translation_error_, double time_to_run_, std::vector<iterations_info> & information_amm_iterations_);
   ~StatisticalInfoContainer();
   
-  void printInfo(std::ostream & stream);
+  void printInfo(std::ostream & error_information, std::ostream & iteration_information, const bool & is_amm);
 
  private:
   std::string method_name;
@@ -29,14 +29,6 @@ class StatisticalInfoContainer{
   
   static std::string label_iterations_statistical_info;
   static bool label_iterations_statistical_info_written;
-
-
-  double calc_rotation_error(const opengv::rotation_t & original_rotation,
-			     const opengv::rotation_t & obtained_rotation);
-
-  double calc_translation_error(const opengv::translation_t & original_translation,
-				const opengv::translation_t & obtained_translation);
-
 };
 
 #endif

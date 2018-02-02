@@ -46,6 +46,9 @@
 #include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
 #include <opengv/optimization_tools/objective_function_tools/SquaredFunctionInfo.hpp>
 #include <opengv/optimization_tools/objective_function_tools/SquaredFunctionNoIterationsInfo.hpp>
+
+#include <opengv/statistic/AggregateStatisticalInfo.hpp>
+#include <opengv/statistic/StatisticalInfoContainer.hpp>
 #include <opengv/statistic/iterations_info.hpp>
 #include <opengv/amm.hpp>
 
@@ -59,15 +62,20 @@ int main( int argc, char** argv )
 {
   // initialize random seed
   initializeRandomSeed();
-  int n_experiments = 1;//10;
-  int noise_levels = 1;//4;
+  int n_experiments = 3;//10;
+  int noise_levels = 3;//4;
 
   //set experiment parameters
   double noise = 0.0;
   double outlierFraction = 0.0;
   size_t numberPoints = 50;
   int numberCameras = 8;
-
+  std::ofstream error_file("relative_pose_error.csv");
+  std::ofstream iterations_file("relative_pose_iterations.csv");
+  std::vector<StatisticalInfoContainer> statistical_error_info_ge;
+  std::vector<StatisticalInfoContainer> statistical_error_info_17pt;
+  std::vector<StatisticalInfoContainer> statistical_error_info_amm;
+  std::vector<StatisticalInfoContainer> statistical_error_info_nonlin;
   for(int index = 0; index < noise_levels; index++){
     //set noise
     double noise = 0.0 + 1 * index;
@@ -250,13 +258,49 @@ int main( int argc, char** argv )
 									          info_container_noiterations,
 									     solver_container, step, stat_iterations_list);
       gettimeofday(&toc, 0);
-      double time_amm_solution_noiterations = TIMETODOUBLE(timeval_minus(toc,tic)); //  / iterations;
-
       //delete info_container;
       delete solver_container;
       delete info_container_noiterations;
+
+      
+      double time_amm_solution_noiterations = TIMETODOUBLE(timeval_minus(toc,tic)); //  / iterations;
+      double rotation_error_amm = (amm_solution_noiterations.block<3,3>(0,0) - rotation).norm();
+      double translation_error_amm = (amm_solution_noiterations.block<3,1>(0,3) - position).norm();
+      StatisticalInfoContainer trial_statistical_info_amm(noise, "amm", rotation_error_amm, translation_error_amm, time_amm_solution_noiterations, stat_iterations_list);
+      
+      stat_iterations_list.clear();
+      double rotation_error_17pt = (seventeenpt_transformation_all.block<3,3>(0,0) - rotation).norm();
+      double translation_error_17pt = (seventeenpt_transformation_all.block<3,1>(0,3) - position).norm();
+      StatisticalInfoContainer trial_statistical_info_17pt(noise, "17 pt", rotation_error_17pt, translation_error_17pt, seventeenpt_time_all, stat_iterations_list);
+
+      double rotation_error_ge = (ge_transformation.block<3,3>(0,0) - rotation).norm();
+      double translation_error_ge = (ge_transformation.block<3,1>(0,3) - position).norm();
+      StatisticalInfoContainer trial_statistical_info_ge(noise, "ge", rotation_error_ge, translation_error_ge, ge_time, stat_iterations_list);
+
+      double rotation_error_nonlin = (nonlinear_transformation.block<3,3>(0,0) - rotation).norm();
+      double translation_error_nonlin = (nonlinear_transformation.block<3,1>(0,3) - position).norm();
+      StatisticalInfoContainer trial_statistical_info_nonlin(noise, "nonlin", rotation_error_nonlin, translation_error_nonlin, nonlinear_time, stat_iterations_list);
+
+      statistical_error_info_ge.push_back(trial_statistical_info_ge);
+      statistical_error_info_17pt.push_back(trial_statistical_info_17pt);
+      statistical_error_info_amm.push_back(trial_statistical_info_amm);
+      statistical_error_info_nonlin.push_back(trial_statistical_info_nonlin);
       index_stat++;
     }
     total_realizations++;
   }
+  for(int i = 0; i < statistical_error_info_ge.size(); ++i){
+    statistical_error_info_ge[i].printInfo(error_file, iterations_file, false);
+  }
+  for(int i = 0; i < statistical_error_info_17pt.size(); ++i){
+    statistical_error_info_17pt[i].printInfo(error_file, iterations_file, false);
+  }
+  for(int i = 0; i < statistical_error_info_nonlin.size(); ++i){
+    statistical_error_info_nonlin[i].printInfo(error_file, iterations_file, false);
+  }
+  for(int i = 0; i < statistical_error_info_amm.size(); ++i){
+    statistical_error_info_amm[i].printInfo(error_file, iterations_file, true);
+  }
+  iterations_file.close();
+  error_file.close();
 }
