@@ -15,10 +15,10 @@ Eigen::Matrix3d SolverToolsNoncentralRelativePose::exp_R( Eigen::Matrix3d & X ){
 
 
 opengv::rotation_t SolverToolsNoncentralRelativePose::rotation_solver(opengv::rotation_t & state_rotation, const opengv::translation_t & translation,
-								      double &tol, ObjectiveFunctionInfo * info_function){
+								      double &tol, ObjectiveFunctionInfo * info_function, int & k){
   double g = 1.0;
   double erro = 1.0;
-  int k = 0;
+  k = 0;
   opengv::rotation_t X = state_rotation;
   opengv::rotation_t previous_X = Eigen::Matrix3d::Zero(3,3);
   Eigen::Matrix3d Z  = Eigen::Matrix3d::Zero(3,3);
@@ -31,6 +31,7 @@ opengv::rotation_t SolverToolsNoncentralRelativePose::rotation_solver(opengv::ro
   Eigen::Matrix3d reference = Eigen::Matrix3d::Identity(3,3);
   //std::cout << "Inside rotation solver to check the values: " << std::endl;
   //std::cout << "Before process starts the rotation matrix is: " << X << std::endl;
+  
   while( erro > tol && k < 1e5 )
     {
 
@@ -112,11 +113,11 @@ opengv::rotation_t SolverToolsNoncentralRelativePose::rotation_solver(opengv::ro
 
 
 
-opengv::translation_t SolverToolsNoncentralRelativePose::translation_solver(const opengv::rotation_t & rotation, opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double & step){
+opengv::translation_t SolverToolsNoncentralRelativePose::translation_solver(const opengv::rotation_t & rotation, opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double & step, int & k){
 
  
   double error = 1;
-  int k = 0;
+  k = 0;
   //std::cout << "Translation gradient: " << std::endl;
   opengv::translation_t state = translation;
   opengv::translation_t grad = info_function->translation_gradient(rotation, state);

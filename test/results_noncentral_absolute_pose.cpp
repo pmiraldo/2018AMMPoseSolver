@@ -39,11 +39,10 @@
 #include <opengv/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.hpp>
 #include <opengv/optimization_tools/objective_function_tools/GlobalPnPInfiniteNormFunctionInfo.hpp>
 #include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
+#include <opengv/statistic/iterations_info.hpp>
 #include <sstream>
 #include <fstream>
 
-#include "container.h"
-#include "statistic_info.h"
 #include "random_generators.hpp"
 #include "experiment_helpers.hpp"
 #include "time_measurement.hpp"
@@ -65,23 +64,12 @@ int main( int argc, char** argv )
   int numberCameras = 4;
 
   //Experience parameters
-  int n_experiments = 1;//10;
-  int noise_levels = 1;//4;
+  int n_experiments = 3;//10;
+  int noise_levels = 3;//4;
 
-  std::vector<Container> information_gp3p;
-  std::vector<Container> information_gpnp;
-  std::vector<Container> information_upnp;
-  std::vector<Container> information_nonlinear;
-  std::vector<Container> information_amm;
-  std::vector<Statistic_info> information_statistics;
   for(int index = 0; index < noise_levels; index++){
 
-    double noise = 0;//0.0 + 1 * index;
-    Container aux_gp3p(noise, "gp3p");
-    Container aux_gpnp(noise, "gpnp");
-    Container aux_upnp(noise, "upnp");
-    Container aux_nonlinear(noise, "nonlinear");
-    Container aux_amm(noise, "amm");
+    double noise = 0.0 + 1 * index;
     int index_stat = 0;
     int total_realizations = 0;
     while(index_stat < n_experiments){
@@ -222,158 +210,86 @@ int main( int argc, char** argv )
       std::cout << nonlinear_time << std::endl;*/
 
       std::cout << "Verification Info" << std::endl;
+      //Choose the right initial state for 
+      rotation_t rotation_gp3p;
+      translation_t translation_gp3p;
+      double error = 1e7;
+      int index = 0;
+      //Choose the right solution from the gp3p method
+      for(int i = 0; i < gp3p_transformations.size(); ++i){
+	if(error < (rotation - gp3p_transformations[i].block<3,3>(0,0) ).norm()){
+	  error = (rotation - gp3p_transformations[i].block<3,3>(0,0) ).norm();
+	  index = i;
+	}
+      }
+      rotation_gp3p    = gp3p_transformations[index].block<3,3>(0,0);
+      translation_gp3p = gp3p_transformations[index].block<3,1>(0,0);
       
-      //add a small perturbation to the rotation
-      getPerturbedPose( position, rotation, t_perturbed, R_perturbed, 0.1 );
-      adapter.sett(t_perturbed);
-      adapter.setR(R_perturbed);
-      ObjectiveFunctionInfo * info_container = new GlobalPnPFunctionInfo(adapter);
-      double angle =  M_PI / 180;
-      double wx = 0; double wy = 0; double wz = 1;
-      Eigen::Matrix3d skew_matrix = Eigen::Matrix3d::Zero(3,3);
-      skew_matrix(0,1) = -wz; skew_matrix(0,2) = wy;
-      skew_matrix(1,0) =  wz; skew_matrix(1,2) = -wx;
-      skew_matrix(2,0) = -wy; skew_matrix(2,1) =  wx;
-      rotation_t error_rotation = Eigen::Matrix3d::Identity(3,3) +
-                              (std::sin(angle) / angle)*skew_matrix +
-                              ( ( 1 - std::cos(angle) * std::cos(angle) ) / (angle * angle) ) * skew_matrix * skew_matrix;
-
-      translation_t error_translation = Eigen::Vector3d::Random(3,1);
-      error_translation = 0.2 * error_translation / error_translation.norm();
-      rotation_t rot = R_perturbed.inverse(); //rotation.inverse();
-      translation_t trans = -R_perturbed.inverse() * t_perturbed;//position + error_translation;
-      //Create solver pointer
-      SolverTools * solver_container = NULL;
-      solver_container = new SolverToolsNoncentralRelativePose();
+      
+      std::vector<iterations_info> iterations_list;
+      //Create solver pointer and solver tools
+      SolverTools * solver_container = solver_container = new SolverToolsNoncentralRelativePose();
       amm solver_object;
-      gettimeofday(&tic,0);
+
+      //AMM GlobalPnPFunctionInfo
       double tol = 1e-6;
       double step = 0.008;
-      transformation_t amm_solution = solver_object.amm_solver( tol, rot, trans, info_container, solver_container, step);
-      gettimeofday(&toc, 0);
-      delete info_container;
-      delete solver_container;
-     
-      double time_amm_solution = TIMETODOUBLE(timeval_minus(toc,tic));
-      std::cout << "amm solution: " << std::endl;
-      std::cout << "perturbed rotation:      " << std::endl << rot << std::endl;
-      std::cout << "perturbed translation:   " << std::endl << trans << std::endl;
-      std::cout << "given solution:          " << std::endl << amm_solution << std::endl;
-      std::cout << "rotation distance:       " << (rot  - rotation.inverse()).norm() << std::endl;
-      std::cout << "translation distance:    " << (trans + rotation.inverse()* position).norm() << std::endl;
-      std::cout << "Error rotation (amm):    " << (amm_solution.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
-      std::cout << "Error translation (amm): " << (amm_solution.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
-
-      std::cout << "Error rotation (non lin):    " << (nonlinear_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
-      std::cout << "Error translation (non lin): " << (nonlinear_transformation.block<3,1>(0,3) - position).norm() << std::endl;
-
-      std::cout << "Error rotation (gpnp):    " << (gpnp_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
-      std::cout << "Error translation (gpnp): " << (gpnp_transformation.block<3,1>(0,3) - position).norm() << std::endl;
-      std::cout << "timings from gp3p algorithm: ";
-      std::cout << gp3p_time << std::endl;
-      std::cout << "timings from gpnp algorithm: ";
-      std::cout << gpnp_time << std::endl;
-      std::cout << "timings from upnp algorithm: ";
-      std::cout << upnp_time << std::endl;
-      std::cout << "timings from nonlinear algorithm: ";
-      std::cout << nonlinear_time << std::endl;
-      std::cout << "time amm: "                    << time_amm_solution << std::endl;
-      int size_upnp = upnp_transformations.size();
-      bool flag_non_lin  =  aux_nonlinear.validate_transformation( nonlinear_transformation.block<3,3>(0,0), nonlinear_transformation.block<3,1>(0,3));
-      bool flag_gpnp       = aux_gpnp.validate_transformation(gpnp_transformation.block<3,3>(0,0), gpnp_transformation.block<3,1>(0,3));
-      bool flag_upnp = aux_upnp.validate_transformation(upnp_transformations[size_upnp - 1].block<3,3>(0,0), upnp_transformations[size_upnp - 1].block<3,1>(0,3));
-      bool flag_amm = aux_amm.validate_transformation(amm_solution.block<3,3>(0,0), amm_solution.block<3,1>(0,3));
-      if(flag_non_lin == true && flag_gpnp == true && flag_upnp == true &&
-	 flag_amm == true){
-	aux_nonlinear.add_error_information(rotation, nonlinear_transformation.block<3,3>(0,0), position, nonlinear_transformation.block<3,1>(0,3), nonlinear_time);
-	aux_amm.add_error_information(rotation, amm_solution.block<3,3>(0,0),
-				      position, amm_solution.block<3,1>(0,3), time_amm_solution);
-          aux_gpnp.add_error_information(rotation, gpnp_transformation.block<3,3>(0,0), position, gpnp_transformation.block<3,1>(0,3), gpnp_time);
-          aux_upnp.add_error_information(rotation, upnp_transformations[size_upnp - 1].block<3,3>(0,0), position, upnp_transformations[size_upnp - 1].block<3,1>(0,3), upnp_time);
-          index_stat++;
-      }
-      total_realizations++;
-      ObjectiveFunctionInfo * tester = new OptimalUPnPFunctionInfo(adapter, rotation.inverse(), -rotation.inverse() * position);
-      SolverTools * solver_container_tester = NULL;
-      solver_container_tester = new SolverToolsNoncentralRelativePose();
-      amm solver_object_tester;
-      step = 0.0051;
-      getPerturbedPose( position, rotation, t_perturbed, R_perturbed, 0.1 );
-      adapter.sett(t_perturbed);
-      adapter.setR(R_perturbed);
-      rot = R_perturbed.inverse();
-      trans = -rot * t_perturbed;
+      transformation_t global_pnp;
       gettimeofday(&tic,0);
-      transformation_t amm_solution_tester = solver_object_tester.amm_solver( tol, rot, trans, tester, solver_container_tester, step);
+      for(int i = 0; i < iterations; ++i){
+	ObjectiveFunctionInfo * info_container = new GlobalPnPFunctionInfo(adapter);
+	global_pnp = solver_object.amm_solver( tol, rotation_gp3p.inverse(), -rotation_gp3p.inverse() * translation_gp3p, info_container, solver_container, step, iterations_list);
+	delete info_container;
+      }
+      gettimeofday(&toc,0);
+      double time_pnp_global = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
+
+      //AMM OptimalPnPFunctionInfo
+      step = 0.0051;
+      transformation_t optimal_upnp;
+      gettimeofday(&tic, 0);
+      for(int i = 0; i < iterations; ++i){
+	ObjectiveFunctionInfo * info_container = new OptimalUPnPFunctionInfo(adapter);
+	optimal_upnp = solver_object.amm_solver( tol, rotation_gp3p.inverse(), -rotation_gp3p.inverse() * translation_gp3p, info_container, solver_container, step, iterations_list);
+	delete info_container;
+      }
       gettimeofday(&toc, 0);
-      delete tester;
-      delete solver_container_tester;
-     
-      double time_amm_solution_tester = TIMETODOUBLE(timeval_minus(toc,tic));
-      std::cout << "Error start rotation: " << std::endl << (rot - rotation.inverse()).norm() << std::endl;
-      std::cout << "Error start rotation: " << std::endl << (trans + rotation.inverse()*position).norm() << std::endl;
-      std::cout << "Error rotation tester (amm):    " << (amm_solution_tester.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
-      std::cout << "Error translation tester (amm): " << (amm_solution_tester.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
-      std::cout << "time amm tester: "                    << time_amm_solution_tester << std::endl;
-      amm solver_object_infinite_norm;
-      ObjectiveFunctionInfo * infinity_norm = new GlobalPnPInfiniteNormFunctionInfo(adapter, R_perturbed.inverse(), -R_perturbed.inverse() * t_perturbed);
-      SolverTools * solver_container_infinite_norm = NULL;
-      solver_container_infinite_norm = new SolverToolsNoncentralRelativePose();
+      double time_optimal_upnp = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
+
+      //AMM GlobalPnPFunction Infinite norm
       step = 0.45;
       tol = 1e-15;
-      gettimeofday(&tic,0);
-      transformation_t amm_solution_infinite_norm = solver_object_infinite_norm.amm_solver( tol, rot, trans, infinity_norm, solver_container_infinite_norm, step);
-      gettimeofday(&toc,0);
-      double time_amm_solution_infinite_norm = TIMETODOUBLE(timeval_minus(toc,tic));
-      std::cout << "Error start rotation: " << std::endl << (rot - rotation.inverse()).norm() << std::endl;
-      std::cout << "Error start rotation: " << std::endl << (trans + rotation.inverse()*position).norm() << std::endl;
-      std::cout << "Error rotation infinite (amm):    " << (amm_solution_infinite_norm.block<3,3>(0,0) - rotation.inverse()).norm() << std::endl;
-      std::cout << "Error translation infinite (amm): " << (amm_solution_infinite_norm.block<3,1>(0,3) + rotation.inverse() * position).norm() << std::endl;
-      std::cout << "time amm infinite: "                    << time_amm_solution_infinite_norm << std::endl;
-      /*std::cout << "END OF CONSTRUCTOR" << std::endl << std::endl;
-      std::cout << "Objective function values: " << std::endl;
-      double fun = infinity_norm->objective_function_value(rotation.inverse(), -rotation.inverse() * position);
-      std::cout << "Returned value: "                        << fun << std::endl << std::endl;
-      std::cout << "The rotation gradient: "    << std::endl << infinity_norm->rotation_gradient(rotation.inverse(), -rotation.inverse() * position) << std::endl << std::endl;
-      std::cout << "The translation gradient: " << std::endl << infinity_norm->translation_gradient(rotation.inverse(), -rotation.inverse() * position) << std::endl;
-      std::cout << std::endl << std::endl << std::endl;
-      std::cout << "R_" << std::endl << rotation << std::endl << std::endl;
-      std::cout << "t_" << std::endl << position << std::endl << std::endl;
-      fun = infinity_norm->objective_function_value(rotation,  position);
-      std::cout << "Returned value: "                        << fun << std::endl << std::endl;
-      std::cout << "The rotation gradient: "    << std::endl << infinity_norm->rotation_gradient(rotation, position) << std::endl << std::endl;
-      std::cout << "The translation gradient: " << std::endl << infinity_norm->translation_gradient(rotation, position) << std::endl;*/
-      delete solver_container_infinite_norm;
-      delete infinity_norm;
-    }
-    Statistic_info aux(noise, index_stat, total_realizations);
-    information_statistics.push_back(aux);
-   
-    information_gpnp.push_back(aux_gpnp);
-    information_upnp.push_back(aux_upnp);
-    information_nonlinear.push_back(aux_nonlinear);
-    information_amm.push_back(aux_amm);
-  }
-  std::ofstream datafile;
-  datafile.open("data.csv");
-  for(unsigned int i = 0; i < information_gpnp.size(); ++i){
-    information_gpnp[i].printInfo(datafile);
-  }
-  for(unsigned int i = 0; i < information_nonlinear.size(); ++i){
-    information_nonlinear[i].printInfo(datafile);
-  }
-  for(unsigned int i = 0; i < information_amm.size(); ++i){
-    information_amm[i].printInfo(datafile);
-  }
-  for(unsigned int i = 0; i < information_upnp.size(); ++i){
-    information_upnp[i].printInfo(datafile);
-  }
-  datafile.close();
+      transformation_t infinite_norm_gpnp;
+      gettimeofday(&tic, 0);
+     
+      for(int i = 0; i < iterations; ++i){
+	ObjectiveFunctionInfo * info_container = new GlobalPnPInfiniteNormFunctionInfo(adapter, rotation_gp3p.inverse(), -rotation_gp3p.inverse() * translation_gp3p);
+	infinite_norm_gpnp = solver_object.amm_solver( tol, rotation_gp3p.inverse(), -rotation_gp3p.inverse() * translation_gp3p, info_container, solver_container, step, iterations_list);
+	delete info_container;
+      }
+      gettimeofday(&toc, 0);
+      double time_infinite_norm_gpnp = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
+      //The solver is no longer needed. So it can be erased
+      delete solver_container;
 
-  std::ofstream statistical_data;
-  statistical_data.open("stat_data.csv");
-  for(unsigned int i = 0; i < information_statistics.size(); ++i){
-    information_statistics[i].printInfo(statistical_data);
+
+      //Choose the right solution for the upnp 
+      rotation_t rotation_upnp;
+      translation_t translation_upnp;
+      error = 1e7;
+      index = 0;
+      //Choose the right solution from the upnp method
+      for(int i = 0; i < upnp_transformations.size(); ++i){
+	if(error < (rotation - upnp_transformations[i].block<3,3>(0,0) ).norm()){
+	  error = (rotation - upnp_transformations[i].block<3,3>(0,0) ).norm();
+	  index = i;
+	}
+      }
+      rotation_upnp    = upnp_transformations[index].block<3,3>(0,0);
+      translation_upnp = upnp_transformations[index].block<3,1>(0,0);
+      index_stat++;
+    }
+    total_realizations++;
   }
-  statistical_data.close();
 }
+

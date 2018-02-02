@@ -981,15 +981,26 @@ opengv::relative_pose::modules::ge_main2(
   Eigen::Matrix<std::complex<double>,4,4> V_complex = Eig.eigenvectors();
   Eigen::Vector4d D;
   Eigen::Matrix4d V;
+
+  int index = 0;
   for(size_t i = 0; i < 4; i++)
+  {
+    D[i] = D_complex[i].real();
+    if(D[i] < D[index]) index = i; // keeps the index of the smallest D[i]
+
+    for(size_t j = 0; j < 4; j++)
+      V(i,j) = V_complex(i,j).real();
+  }
+  
+  /*for(size_t i = 0; i < 4; i++)
   {
     D[i] = D_complex[i].real();
     for(size_t j = 0; j < 4; j++)
       V(i,j) = V_complex(i,j).real();
-  }
+      }*/
 
-  double factor = V(3,0);
-  Eigen::Vector4d t = (1.0/factor) * V.col(0);
+  double factor = V(3,index);
+  Eigen::Vector4d t = (1.0/factor) * V.col(index);
 
   output.translation = t;
   output.rotation = math::cayley2rot(cayley);

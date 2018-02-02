@@ -3,7 +3,7 @@
 #include <opengv/Indices.hpp>
 #include <iostream>
 
-OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter, opengv::rotation_t rot, opengv::translation_t trans){
+OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter){
   //Initialize class members
   Mr  = Eigen::MatrixXd::Zero(9,9);
   vr  = Eigen::MatrixXd::Zero(9,1);;
@@ -90,7 +90,7 @@ OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::Ab
     constant = constant + v.transpose() * v;
   }
   
-  Eigen::MatrixXd r = Eigen::MatrixXd::Zero(9,1);
+  /*Eigen::MatrixXd r = Eigen::MatrixXd::Zero(9,1);
   r(0,0) = rot(0,0);
   r(1,0) = rot(1,0);
   r(2,0) = rot(2,0);
@@ -99,7 +99,7 @@ OptimalUPnPFunctionInfo::OptimalUPnPFunctionInfo(const opengv::absolute_pose::Ab
   r(5,0) = rot(2,1);
   r(6,0) = rot(0,2);
   r(7,0) = rot(1,2);
-  r(8,0) = rot(2,2);
+  r(8,0) = rot(2,2);*/
  
   //std::cout << "The squared residual: " << std::endl;
   //std::cout << (r.transpose() * Mr * r + vr.transpose() * r + r.transpose() * Mrt * trans + vt.transpose() * trans + constant + n * trans.transpose() * trans) << std::endl;

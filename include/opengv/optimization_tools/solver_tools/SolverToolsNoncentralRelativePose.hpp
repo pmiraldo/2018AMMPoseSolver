@@ -8,9 +8,9 @@ public:
   Eigen::Matrix3d exp_R( Eigen::Matrix3d & X );
 
   opengv::rotation_t rotation_solver(opengv::rotation_t & state_rotation, const opengv::translation_t & translation,
-                                     double &tol, ObjectiveFunctionInfo * info_function);
+                                     double &tol, ObjectiveFunctionInfo * info_function, int & k);
 
   opengv::translation_t translation_solver(const opengv::rotation_t & rotation,
-                                           opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double &step);
+                                           opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double &step, int & k);
 
 };

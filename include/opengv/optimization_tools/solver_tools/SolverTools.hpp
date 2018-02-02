@@ -13,10 +13,10 @@ class SolverTools{
   virtual Eigen::Matrix3d exp_R( Eigen::Matrix3d & X ) = 0;
  
   virtual opengv::rotation_t rotation_solver(opengv::rotation_t & state_rotation, const opengv::translation_t & translation,
-					     double &tol, ObjectiveFunctionInfo * info_function) = 0;
+					     double &tol, ObjectiveFunctionInfo * info_function, int & k) = 0;
 
   virtual opengv::translation_t translation_solver(const opengv::rotation_t & rotation,
-						   opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double &step) = 0;
+						   opengv::translation_t & translation, double &tol, ObjectiveFunctionInfo * info_function, double &step, int & k) = 0;
 
 };
 

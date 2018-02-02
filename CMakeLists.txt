@@ -14,6 +14,8 @@ set (OPENGV_VERSION_MINOR 0)
 
 set(CMAKE_BUILD_TYPE Release)
 
+find_package(OpenCV REQUIRED)
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
@@ -143,9 +145,9 @@ set( OPENGV_SOURCE_FILES
   src/amm.cpp
 
 
-  #supporting files
-  test/container.cpp
-  test/statistic_info.cpp
+  #statistical information tools
+  src/statistic/StatisticalInfoContainer.cpp
+  src/statistic/AggregateStatisticalInfo.cpp
   )
 
 
@@ -204,9 +206,12 @@ set( OPENGV_HEADER_FILES
   include/opengv/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.hpp
   #amm
   include/opengv/amm.hpp
-  #supporting files
-  test/container.h
-  test/statistic_info.h)
+
+  #statistical information tools
+  include/opengv/statistic/iterations_info.hpp
+  include/opengv/statistic/StatisticalInfoContainer.hpp
+  include/opengv/statistic/AggregateStatisticalInfo.hpp
+  )
 
 
 add_library( opengv ${OPENGV_SOURCE_FILES} ${OPENGV_HEADER_FILES} )
@@ -277,11 +282,11 @@ IF (BUILD_TESTS)
     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     COMMAND test_relative_pose_sac)
 
-  #add_executable( test_noncentral_relative_pose test/test_noncentral_relative_pose.cpp )
-  #target_link_libraries( test_noncentral_relative_pose opengv random_generators )
-  #add_test(NAME test_noncentral_relative_pose
-  #  WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-  #  COMMAND test_noncentral_relative_pose)
+  add_executable( test_noncentral_relative_pose test/test_noncentral_relative_pose.cpp )
+  target_link_libraries( test_noncentral_relative_pose opengv random_generators )
+  add_test(NAME test_noncentral_relative_pose
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMAND test_noncentral_relative_pose)
 
   add_executable( results_noncentral_relative_pose test/results_noncentral_relative_pose.cpp )
   target_link_libraries( results_noncentral_relative_pose opengv random_generators )
@@ -343,6 +348,18 @@ IF (BUILD_TESTS)
     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     COMMAND test_Sturm)
 
+  add_Executable( features test/features.cpp )
+  target_link_libraries( features opengv random_generators ${OpenCV_LIBS} )
+  add_test(NAME features
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMAND features)
+
+  add_Executable( features_noncentral test/features_noncentral.cpp )
+  target_link_libraries( features_noncentral opengv random_generators ${OpenCV_LIBS} )
+  add_test(NAME features_noncentral
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMAND features_noncentral)
+
   set_target_properties(
     test_absolute_pose
     test_absolute_pose_sac
@@ -353,7 +370,7 @@ IF (BUILD_TESTS)
     test_relative_pose_rotationOnly
     test_relative_pose_rotationOnly_sac
     test_relative_pose_sac
-    #test_noncentral_relative_pose
+    test_noncentral_relative_pose
     results_noncentral_relative_pose
     results_noncentral_absolute_pose
     test_noncentral_relative_pose_sac
@@ -365,6 +382,9 @@ IF (BUILD_TESTS)
     test_point_cloud_sac
     test_Sturm
 
+    #real data
+    features
+    features_noncentral
     PROPERTIES
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED ON

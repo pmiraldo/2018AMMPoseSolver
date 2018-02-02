@@ -39,6 +39,9 @@
 #include <math.h>
 #include <random>
 
+#include <opengv/amm.hpp>
+
+
 #include "random_generators.hpp"
 #include "experiment_helpers.hpp"
 #include "time_measurement.hpp"
@@ -120,10 +123,10 @@ int main( int argc, char** argv )
   
   std::cout << "running ge with 8 correspondences" << std::endl;
   std::vector<int> indices8 = getNindices(8);
-  rotation_t ge_rotation;
+  transformation_t ge_transformation;
   gettimeofday( &tic, 0 );
   for( size_t i = 0; i < iterations; i++ )
-    ge_rotation = relative_pose::ge(adapter,indices8);
+    ge_transformation = relative_pose::ge(adapter,indices8);
   gettimeofday( &toc, 0 );
   double ge_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
   
@@ -177,7 +180,7 @@ int main( int argc, char** argv )
   for( size_t i = 0; i < sixpt_rotations.size(); i++ )
     std::cout << sixpt_rotations[i] << std::endl << std::endl;
   std::cout << "result from ge using 8 points:" << std::endl;
-  std::cout << ge_rotation << std::endl << std::endl;
+  std::cout << ge_transformation << std::endl << std::endl;
   std::cout << "results from 17pt algorithm:" << std::endl;
   std::cout << seventeenpt_transformation << std::endl << std::endl;
   std::cout << "results from 17pt algorithm with all points:" << std::endl;
@@ -202,7 +205,7 @@ int main( int argc, char** argv )
   double tol = 1e-12;
   rotation_t initial_state = MatrixXd::Identity(3,3);
 
-  transformation_t amm_solution;
+  /*transformation_t amm_solution;
  
   std::mt19937 rng;
   rng.seed(std::random_device()());
@@ -222,14 +225,16 @@ int main( int argc, char** argv )
   rotation_t  initial_rotation = rotation * error_rotation;
   translation_t initial_translation = position;// + error_translation;
   gettimeofday(&tic,0);
+  amm solver;
+  double step = 0.1;
   for(int i = 0; i < iterations; i++){
-    amm_solution  = relative_pose::amm(adapter, tol, initial_rotation, initial_translation);//initial_state);
+    amm_solution  = solver.amm_solver(tol, initial_rotation, initial_translation, step);//initial_state);
   };
-  gettimeofday(&toc,0); 
+  gettimeofday(&toc,01); 
   double time_amm_solution =
-    TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
+  TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;*/
 
-  std::cout << "********************************************************" << std::endl;
+  /*std::cout << "********************************************************" << std::endl;
   std::cout << "Vector error: " << std::endl << skew_matrix << std::endl;
   std::cout << "Angle:        " << std::endl << angle       << std::endl;
   std::cout << "Erro da rotação: "    << std::endl << error_rotation    << std::endl;
@@ -241,7 +246,7 @@ int main( int argc, char** argv )
   std::cout << "Initial translation: " << std::endl << initial_translation << std::endl;
   std::cout << "Error AMM: " << std::endl;
   std::cout << (amm_solution.block<3,3>(0,0) - rotation).norm() << std::endl;
-  std::cout << "Time: " << time_amm_solution << std::endl;
+  std::cout << "Time: " << time_amm_solution << std::endl;*/
 
   std::cout << "Error 17: " << std::endl;
   std::cout << (seventeenpt_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
@@ -250,6 +255,13 @@ int main( int argc, char** argv )
   std::cout << (nonlinear_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
   std::cout << "Time: " << nonlinear_time << std::endl;
   std::cout << "GE: " << std::endl;
-  std::cout << (ge_rotation - rotation).norm() << std::endl;
+  std::cout << (ge_transformation.block<3,3>(0,0) - rotation).norm() << std::endl;
   std::cout << "Time: " << ge_time << std::endl;
+
+  std::cout << "GE Error translation: " << std::endl;
+  std::cout << (ge_transformation.block<3,1>(0,3) - position).norm() << std::endl;
+  std::cout << "Error 17 translation: " << std::endl;
+  std::cout << (seventeenpt_transformation.block<3,1>(0,3) - position).norm() << std::endl;
+  std::cout << "Error nonlin translation: " << std::endl;
+  std::cout << (nonlinear_transformation.block<3,1>(0,3) - position).norm() << std::endl;
 }

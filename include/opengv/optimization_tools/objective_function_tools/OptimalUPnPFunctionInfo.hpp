@@ -7,7 +7,7 @@
 
 class OptimalUPnPFunctionInfo : public ObjectiveFunctionInfo {
 public:
-  OptimalUPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter, opengv::rotation_t rot, opengv::translation_t trans);
+  OptimalUPnPFunctionInfo(const opengv::absolute_pose::AbsoluteAdapterBase & adapter);
   ~OptimalUPnPFunctionInfo();
 
   double objective_function_value(const opengv::rotation_t & rotation,
