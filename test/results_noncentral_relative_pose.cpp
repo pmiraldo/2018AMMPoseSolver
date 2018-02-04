@@ -1,4 +1,4 @@
-/******************************************************************************
+Á/******************************************************************************
  * Author:   Laurent Kneip                                                    *
  * Contact:  kneip.laurent@gmail.com                                          *
  * License:  Copyright (c) 2013 Laurent Kneip, ANU. All rights reserved.      *
@@ -62,8 +62,9 @@ int main( int argc, char** argv )
 {
   // initialize random seed
   initializeRandomSeed();
-  int n_experiments = 3;//10;
-  int noise_levels = 3;//4;
+  int n_experiments = 30;//10;
+  double percentage = 0.2;
+  int noise_levels = 7;//4;
 
   //set experiment parameters
   double noise = 0.0;
@@ -82,8 +83,16 @@ int main( int argc, char** argv )
     std::cout << std::endl << std::endl << "***************************" << std::endl;
     std::cout << "Noise: " << noise << std::endl;
     int index_stat = 0;
+
+    //This part will be used to estimate the average so we can eliminate outliers
     int total_realizations = 0;
-    while(index_stat < n_experiments){
+    std::vector<double> average_estimator;
+    int estimator_stat_counter = 0;
+    while(estimatos_stat_counter < percentage * n_experiments){
+      
+    }
+    //End of the part that eliminates outliers
+    while(index_stat < n_experiments ){
       //generate a random pose for viewpoint 1
       translation_t position1 = Eigen::Vector3d::Zero();
       rotation_t rotation1 = Eigen::Matrix3d::Identity();

@@ -28,17 +28,31 @@ void StatisticalInfoContainer::printInfo(std::ostream & error_information, std::
       iteration_information << label_iterations_statistical_info << std::endl;
       label_iterations_statistical_info_written = true;
     }
-
+    iteration_information << method_name       << ",";
+    iteration_information << noise_level       << ",";
+    iteration_information << "rotation: ";
     for(int i = 0; i < information_amm_iterations.size(); ++i){
-      iteration_information << method_name       << ",";
-      iteration_information << noise_level       << ",";
-      iteration_information << information_amm_iterations[i].iterations_rotation    << ",";
-      iteration_information << information_amm_iterations[i].iterations_translation << std::endl;
+      
+      iteration_information << information_amm_iterations[i].iterations_rotation;
+      if( i != information_amm_iterations.size() - 1){
+	iteration_information <<  " ,";
+      }
     }
+    iteration_information << std::endl;
+    iteration_information << method_name       << ",";
+    iteration_information << noise_level       << ",";
+    iteration_information << "translation: ";
+    for(int i = 0; i < information_amm_iterations.size(); ++i){
+      iteration_information << information_amm_iterations[i].iterations_translation;
+      if( i != information_amm_iterations.size() - 1){
+	iteration_information <<  " ,";
+      }
+    }
+    iteration_information << std::endl;
   }
 }
 
 std::string StatisticalInfoContainer::label_error_statistical_info = "method name, noise level, rotation error, translation error, execution time";
 bool StatisticalInfoContainer::label_error_statistical_info_written = false;
-std::string StatisticalInfoContainer::label_iterations_statistical_info = "method name, noise level, rotation iterations, translation iterations";
+std::string StatisticalInfoContainer::label_iterations_statistical_info = "method name, noise level, iteration kind";
 bool StatisticalInfoContainer::label_iterations_statistical_info_written = false;

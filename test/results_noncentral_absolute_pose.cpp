@@ -39,13 +39,17 @@
 #include <opengv/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.hpp>
 #include <opengv/optimization_tools/objective_function_tools/GlobalPnPInfiniteNormFunctionInfo.hpp>
 #include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
-#include <opengv/statistic/iterations_info.hpp>
 #include <sstream>
 #include <fstream>
 
 #include "random_generators.hpp"
 #include "experiment_helpers.hpp"
 #include "time_measurement.hpp"
+
+#include <opengv/statistic/AggregateStatisticalInfo.hpp>
+#include <opengv/statistic/StatisticalInfoContainer.hpp>
+#include <opengv/statistic/iterations_info.hpp>
+#include <opengv/amm.hpp>
 
 
 using namespace std;
@@ -64,9 +68,18 @@ int main( int argc, char** argv )
   int numberCameras = 4;
 
   //Experience parameters
-  int n_experiments = 3;//10;
+  int n_experiments = 20;//10;
   int noise_levels = 3;//4;
-
+  std::ofstream error_file("absolute_pose_error.csv");
+  std::ofstream iterations_file("absolute_pose_iterations.csv");
+  std::vector<StatisticalInfoContainer> statistical_error_info_gp3p;
+  std::vector<StatisticalInfoContainer> statistical_error_info_gpnp;
+  std::vector<StatisticalInfoContainer> statistical_error_info_upnp;
+  std::vector<StatisticalInfoContainer> statistical_error_info_nonlin;
+  std::vector<StatisticalInfoContainer> statistical_error_info_amm_global_pnp;
+  std::vector<StatisticalInfoContainer> statistical_error_info_amm_optimal_upnp;
+  std::vector<StatisticalInfoContainer> statistical_error_info_amm_infinite_norm;
+ 
   for(int index = 0; index < noise_levels; index++){
 
     double noise = 0.0 + 1 * index;
@@ -88,8 +101,8 @@ int main( int argc, char** argv )
       std::vector<int> camCorrespondences;
       Eigen::MatrixXd gt(3,numberPoints);
       generateRandom2D3DCorrespondences(
-				      position, rotation, camOffsets, camRotations                                      , numberPoints, noise, outlierFraction,
-				      bearingVectors, points, camCorrespondences, gt );
+					position, rotation, camOffsets, camRotations, numberPoints, noise, outlierFraction,
+					bearingVectors, points, camCorrespondences, gt );
 
       //print the experiment characteristics
       printExperimentCharacteristics(
@@ -244,6 +257,12 @@ int main( int argc, char** argv )
       gettimeofday(&toc,0);
       double time_pnp_global = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
 
+      double rotation_error_amm_global_pnp = (global_pnp.block<3,3>(0,0) - rotation).norm();
+      double translation_error_amm_global_pnp = (global_pnp.block<3,1>(0,3) - position).norm();
+      StatisticalInfoContainer trial_statistical_info_amm_global_pnp(noise, "amm gpnp", rotation_error_amm_global_pnp, translation_error_amm_global_pnp, time_pnp_global, iterations_list);
+
+
+      
       //AMM OptimalPnPFunctionInfo
       step = 0.0051;
       transformation_t optimal_upnp;
@@ -255,6 +274,9 @@ int main( int argc, char** argv )
       }
       gettimeofday(&toc, 0);
       double time_optimal_upnp = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
+      double rotation_error_amm_optimal_upnp = (optimal_upnp.block<3,3>(0,0) - rotation).norm();
+      double translation_error_amm_optimal_upnp = (optimal_upnp.block<3,1>(0,3) - position).norm();
+      StatisticalInfoContainer trial_statistical_info_amm_optimal_upnp(noise, "amm upnp", rotation_error_amm_global_pnp, translation_error_amm_optimal_upnp, time_optimal_upnp, iterations_list);
 
       //AMM GlobalPnPFunction Infinite norm
       step = 0.45;
@@ -269,6 +291,10 @@ int main( int argc, char** argv )
       }
       gettimeofday(&toc, 0);
       double time_infinite_norm_gpnp = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
+
+      double rotation_error_amm_infinite_norm_gpnp = (infinite_norm_gpnp.block<3,3>(0,0) - rotation).norm();
+      double translation_error_amm_infinite_norm_gpnp = (infinite_norm_gpnp.block<3,1>(0,3) - position).norm();
+      StatisticalInfoContainer trial_statistical_info_amm_infinite_norm_gpnp(noise, "amm infinite norm", rotation_error_amm_infinite_norm_gpnp, translation_error_amm_infinite_norm_gpnp, time_infinite_norm_gpnp, iterations_list);
       //The solver is no longer needed. So it can be erased
       delete solver_container;
 
@@ -287,9 +313,55 @@ int main( int argc, char** argv )
       }
       rotation_upnp    = upnp_transformations[index].block<3,3>(0,0);
       translation_upnp = upnp_transformations[index].block<3,1>(0,0);
+
+      iterations_list.clear();
       index_stat++;
+      statistical_error_info_amm_global_pnp.push_back(trial_statistical_info_amm_global_pnp);
+      statistical_error_info_amm_optimal_upnp.push_back(trial_statistical_info_amm_optimal_upnp);
+      statistical_error_info_amm_infinite_norm.push_back(trial_statistical_info_amm_infinite_norm_gpnp);
+
+      double rotation_error_gp3p = (rotation_gp3p - rotation).norm();
+      double translation_error_gp3p = (translation_gp3p - position).norm();
+      double rotation_error_upnp = (rotation_upnp - rotation).norm();
+      double translation_error_upnp = (translation_upnp - position).norm();
+      double rotation_error_gpnp = (gpnp_transformation.block<3,3>(0,0) - rotation).norm();
+      double translation_error_gpnp = (gpnp_transformation.block<3,1>(0,3) - position).norm();
+      double rotation_error_nonlin = (nonlinear_transformation.block<3,3>(0,0) - rotation).norm();
+      double translation_error_nonlin = (nonlinear_transformation.block<3,1>(0,3) - position).norm();
+
+      StatisticalInfoContainer trial_statistical_info_gp3p(noise, "gp3p", rotation_error_gp3p, translation_error_gp3p, gp3p_time, iterations_list);
+      StatisticalInfoContainer trial_statistical_info_upnp(noise, "upnp", rotation_error_upnp, translation_error_upnp, upnp_time, iterations_list);
+      StatisticalInfoContainer trial_statistical_info_gpnp(noise, "gpnp", rotation_error_gpnp, translation_error_gpnp, gpnp_time, iterations_list);
+      StatisticalInfoContainer trial_statistical_info_nonlin(noise, "nonlin", rotation_error_nonlin, translation_error_nonlin, nonlinear_time, iterations_list);
+      statistical_error_info_gp3p.push_back(trial_statistical_info_gp3p);
+      statistical_error_info_gpnp.push_back(trial_statistical_info_upnp);
+      statistical_error_info_upnp.push_back(trial_statistical_info_gpnp);
+      statistical_error_info_nonlin.push_back(trial_statistical_info_nonlin);
     }
     total_realizations++;
   }
+  for(int i = 0; i < statistical_error_info_amm_global_pnp.size(); ++i){
+    statistical_error_info_amm_global_pnp[i].printInfo(error_file, iterations_file, true);
+  }
+  for(int i = 0; i < statistical_error_info_amm_optimal_upnp.size(); ++i){
+    statistical_error_info_amm_optimal_upnp[i].printInfo(error_file, iterations_file, true);
+  }
+  for(int i = 0; i < statistical_error_info_amm_infinite_norm.size(); ++i){
+    statistical_error_info_amm_infinite_norm[i].printInfo(error_file, iterations_file, true);
+  }
+  for(int i = 0; i < statistical_error_info_gp3p.size(); ++i){
+    statistical_error_info_gp3p[i].printInfo(error_file, iterations_file, false);
+  }
+  for(int i = 0; i < statistical_error_info_gpnp.size(); ++i){
+    statistical_error_info_gpnp[i].printInfo(error_file, iterations_file, false);
+  }
+  for(int i = 0; i < statistical_error_info_upnp.size(); ++i){
+    statistical_error_info_upnp[i].printInfo(error_file, iterations_file, false);
+  }
+  for(int i = 0; i < statistical_error_info_nonlin.size(); ++i){
+    statistical_error_info_nonlin[i].printInfo(error_file, iterations_file, false);
+  }
+  iterations_file.close();
+  error_file.close();
 }
 
