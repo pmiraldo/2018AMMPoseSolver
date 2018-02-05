@@ -1,4 +1,4 @@
-Á/******************************************************************************
+/******************************************************************************
  * Author:   Laurent Kneip                                                    *
  * Contact:  kneip.laurent@gmail.com                                          *
  * License:  Copyright (c) 2013 Laurent Kneip, ANU. All rights reserved.      *
@@ -86,11 +86,115 @@ int main( int argc, char** argv )
 
     //This part will be used to estimate the average so we can eliminate outliers
     int total_realizations = 0;
-    std::vector<double> average_estimator;
+    std::vector<double> average_estimator_rotation;
+    std::vector<double> average_estimator_translation;
     int estimator_stat_counter = 0;
-    while(estimatos_stat_counter < percentage * n_experiments){
+    while(estimator_stat_counter < percentage * n_experiments){
+      //generate a random pose for viewpoint 1
+      translation_t position1 = Eigen::Vector3d::Zero();
+      rotation_t rotation1 = Eigen::Matrix3d::Identity();
+
+      //generate a random pose for viewpoint 2
+      translation_t position2 = generateRandomTranslation(2.0);
+      rotation_t rotation2 = generateRandomRotation(0.5);
+
+      //create a fake central camera
+      translations_t camOffsets;
+      rotations_t camRotations;
+      generateRandomCameraSystem( numberCameras, camOffsets, camRotations );
+
+      //derive correspondences based on random point-cloud
+      bearingVectors_t bearingVectors1;
+      bearingVectors_t bearingVectors2;
+      std::vector<int> camCorrespondences1;
+      std::vector<int> camCorrespondences2;
+      Eigen::MatrixXd gt(3,numberPoints);
+      generateRandom2D2DCorrespondences(
+					position1, rotation1, position2, rotation2,
+					camOffsets, camRotations, numberPoints, noise, outlierFraction,
+					bearingVectors1, bearingVectors2,
+					camCorrespondences1, camCorrespondences2, gt );
+
+      //Extract the relative pose
+      translation_t position; rotation_t rotation;
+      extractRelativePose(
+			  position1, position2, rotation1, rotation2, position, rotation, false );
+
+      //print experiment characteristics
+      printExperimentCharacteristics( position, rotation, noise, outlierFraction );
+
+      //create non-central relative adapter
+      relative_pose::NoncentralRelativeAdapter adapter(
+						       bearingVectors1,
+						       bearingVectors2,
+						       camCorrespondences1,
+						       camCorrespondences2,
+						       camOffsets,
+						       camRotations,
+						       position,
+						       rotation);
+      SolverTools * solver_container = NULL;
+      solver_container = new SolverToolsNoncentralRelativePose();
+      ObjectiveFunctionInfo * info_container_noiterations = NULL;
+      info_container_noiterations = new SquaredFunctionNoIterationsInfo(adapter);
+
+      transformation_t seventeenpt_transformation_all;
+      seventeenpt_transformation_all = relative_pose::seventeenpt(adapter);
+      double tol = 1e-6;
+      double step = 0.01;
+      amm solver_object;
+      std::vector<iterations_info> stat_iterations_list;
+      transformation_t amm_solution_noiterations = solver_object.amm_solver( tol, seventeenpt_transformation_all.block<3,3>(0,0),
+									     seventeenpt_transformation_all.block<3,1>(0,3),
+									          info_container_noiterations,
+									     solver_container, step, stat_iterations_list);
+
+      double rotation_error_amm = (amm_solution_noiterations.block<3,3>(0,0) - rotation).norm();
+      double translation_error_amm = (amm_solution_noiterations.block<3,1>(0,3) - position).norm();
+      average_estimator_rotation.push_back(rotation_error_amm);
+      average_estimator_translation.push_back(translation_error_amm);
       
+      estimator_stat_counter++;
     }
+    std::sort(average_estimator_rotation.rbegin(), average_estimator_rotation.rend());
+    std::sort(average_estimator_translation.rbegin(), average_estimator_translation.rend());
+
+    //Obtain the median
+    double median_rotation = 0;
+    double median_translation = 0;
+    if (average_estimator_rotation.size() % 2 == 0){
+      int index_1 = average_estimator_rotation.size() / 2;
+      int index_2 = index_1 - 1;
+      median_rotation = 0.5 * (average_estimator_rotation[index_1] + average_estimator_rotation[index_2]);
+      median_translation = 0.5 * (average_estimator_translation[index_1] + average_estimator_translation[index_2]);
+    }
+    else{
+      int index = (average_estimatior_rotation.size() - 1) / 2;
+       median_rotation = average_estimator_rotation[index];
+       median_translation = average_estimator_translation[index];
+    }
+    for(int i = 0; i < average_estimator_rotation.size(); ++i){
+      average_estimator_rotation[i] = average_estimator_rotation[i] - median_rotation;
+      average_estimator_translation[i] = average_estimator_translation[i] - median_translation;
+    }
+    median_rotation = 0;
+    median_translation = 0;
+    if (average_estimator_rotation.size() % 2 == 0){
+      int index_1 = average_estimator_rotation.size() / 2;
+      int index_2 = index_1 - 1;
+      median_rotation = 0.5 * (average_estimator_rotation[index_1] + average_estimator_rotation[index_2]);
+      median_translation = 0.5 * (average_estimator_translation[index_1] + average_estimator_translation[index_2]);
+    }
+    else{
+      int index = (average_estimatior_rotation.size() - 1) / 2;
+       median_rotation = average_estimator_rotation[index];
+       median_translation = average_estimator_translation[index];
+    }
+    double MAD_rotation = 1.4826 * median_rotation;
+    double MAD_translation = 1.4826 * median_translation;
+    
+    for(int i = 0; i < average_estimator_rotation_size(); ++i){
+      
     //End of the part that eliminates outliers
     while(index_stat < n_experiments ){
       //generate a random pose for viewpoint 1
