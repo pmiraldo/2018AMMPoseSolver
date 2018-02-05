@@ -148,6 +148,9 @@ set( OPENGV_SOURCE_FILES
   #statistical information tools
   src/statistic/StatisticalInfoContainer.cpp
   src/statistic/AggregateStatisticalInfo.cpp
+
+  #auxiliary tools for experiments
+  #src/support_experiments/adapter_creator.cpp
   )
 
 
@@ -211,11 +214,14 @@ set( OPENGV_HEADER_FILES
   include/opengv/statistic/iterations_info.hpp
   include/opengv/statistic/StatisticalInfoContainer.hpp
   include/opengv/statistic/AggregateStatisticalInfo.hpp
+
+  #auxiliary tools for experiments
+  #include/opengv/support_experiments/adapter_creator.hpp
   )
 
 
 add_library( opengv ${OPENGV_SOURCE_FILES} ${OPENGV_HEADER_FILES} )
-add_library( random_generators test/random_generators.cpp test/random_generators.hpp test/experiment_helpers.cpp test/experiment_helpers.hpp test/time_measurement.cpp test/time_measurement.hpp )
+add_library( random_generators test/random_generators.cpp test/random_generators.hpp test/experiment_helpers.cpp test/experiment_helpers.hpp test/time_measurement.cpp test/time_measurement.hpp test/adapter_creator.cpp test/adapter_creator.hpp)
 set_target_properties( opengv random_generators PROPERTIES
   CXX_STANDARD 11
   CXX_STANDARD_REQUIRED ON

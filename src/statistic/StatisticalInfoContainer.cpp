@@ -5,8 +5,10 @@
 #include <opengv/statistic/StatisticalInfoContainer.hpp>
 using namespace opengv;
 
-StatisticalInfoContainer::StatisticalInfoContainer(double noise_level_, std::string method_name_, double rotation_error_, double translation_error_, double time_to_run_, std::vector<iterations_info> & information_amm_iterations_) : noise_level(noise_level_), method_name(method_name_), rotation_error(rotation_error_), translation_error(translation_error_), time_to_run(time_to_run_), information_amm_iterations(information_amm_iterations_){
-  
+StatisticalInfoContainer::StatisticalInfoContainer(double noise_level_, std::string method_name_, const opengv::transformation_t & transformation_method, const opengv::transformation_t & transformation_reference, double time_to_run_, std::vector<iterations_info> & information_amm_iterations_) : method_name(method_name_), noise_level(noise_level_), time_to_run(time_to_run_), information_amm_iterations(information_amm_iterations_)
+{
+  rotation_error = (transformation_method.block<3,3>(0,0) - transformation_reference.block<3,3>(0,0)).norm();
+  translation_error = (transformation_method.block<3,1>(0,3) - transformation_reference.block<3,1>(0,3)).norm();
 }
 
 StatisticalInfoContainer::~StatisticalInfoContainer(){}

@@ -10,7 +10,7 @@
 
 class StatisticalInfoContainer{
  public:
-  StatisticalInfoContainer(double noise_level_, std::string method_name_, double rotation_error_, double translation_error_, double time_to_run_, std::vector<iterations_info> & information_amm_iterations_);
+  StatisticalInfoContainer(double noise_level_, std::string method_name_, const opengv::transformation_t & transformation_method, const opengv::transformation_t & transformation_reference, double time_to_run_, std::vector<iterations_info> & information_amm_iterations_);
   ~StatisticalInfoContainer();
   
   void printInfo(std::ostream & error_information, std::ostream & iteration_information, const bool & is_amm);
