@@ -236,7 +236,7 @@ int main( int argc, char** argv )
 	}
       }
       rotation_gp3p    = gp3p_transformations[index].block<3,3>(0,0);
-      translation_gp3p = gp3p_transformations[index].block<3,1>(0,0);
+      translation_gp3p = gp3p_transformations[index].block<3,1>(0,3);
       
       
       std::vector<iterations_info> iterations_list;
@@ -312,7 +312,7 @@ int main( int argc, char** argv )
 	}
       }
       rotation_upnp    = upnp_transformations[index].block<3,3>(0,0);
-      translation_upnp = upnp_transformations[index].block<3,1>(0,0);
+      translation_upnp = upnp_transformations[index].block<3,1>(0,3);
 
       iterations_list.clear();
       index_stat++;
@@ -337,6 +337,7 @@ int main( int argc, char** argv )
       statistical_error_info_gpnp.push_back(trial_statistical_info_upnp);
       statistical_error_info_upnp.push_back(trial_statistical_info_gpnp);
       statistical_error_info_nonlin.push_back(trial_statistical_info_nonlin);
+    
     }
     total_realizations++;
   }

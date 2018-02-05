@@ -169,9 +169,9 @@ int main( int argc, char** argv )
       median_translation = 0.5 * (average_estimator_translation[index_1] + average_estimator_translation[index_2]);
     }
     else{
-      int index = (average_estimatior_rotation.size() - 1) / 2;
-       median_rotation = average_estimator_rotation[index];
-       median_translation = average_estimator_translation[index];
+      int index = (average_estimator_rotation.size() - 1) / 2;
+      median_rotation = average_estimator_rotation[index];
+      median_translation = average_estimator_translation[index];
     }
     for(int i = 0; i < average_estimator_rotation.size(); ++i){
       average_estimator_rotation[i] = average_estimator_rotation[i] - median_rotation;
@@ -186,14 +186,14 @@ int main( int argc, char** argv )
       median_translation = 0.5 * (average_estimator_translation[index_1] + average_estimator_translation[index_2]);
     }
     else{
-      int index = (average_estimatior_rotation.size() - 1) / 2;
+      int index = (average_estimator_rotation.size() - 1) / 2;
        median_rotation = average_estimator_rotation[index];
        median_translation = average_estimator_translation[index];
     }
     double MAD_rotation = 1.4826 * median_rotation;
     double MAD_translation = 1.4826 * median_translation;
     
-    for(int i = 0; i < average_estimator_rotation_size(); ++i){
+    
       
     //End of the part that eliminates outliers
     while(index_stat < n_experiments ){
