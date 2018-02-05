@@ -1,0 +1,141 @@
+method name, noise level, iteration kind
+amm,0,rotation: 1
+amm,0,translation: 1
+amm,0,rotation: 1
+amm,0,translation: 0
+amm,0,rotation: 1
+amm,0,translation: 0
+amm,0,rotation: 1
+amm,0,translation: 0
+amm,0,rotation: 1
+amm,0,translation: 0
+amm,0,rotation: 1
+amm,0,translation: 1
+amm,0,rotation: 1
+amm,0,translation: 1
+amm,0,rotation: 1
+amm,0,translation: 0
+amm,0,rotation: 1
+amm,0,translation: 0
+amm,0,rotation: 1
+amm,0,translation: 1
+amm,1,rotation: 17 ,1
+amm,1,translation: 1 ,1
+amm,1,rotation: 20 ,3
+amm,1,translation: 1 ,1
+amm,1,rotation: 15 ,1
+amm,1,translation: 1 ,1
+amm,1,rotation: 11
+amm,1,translation: 1
+amm,1,rotation: 16 ,2
+amm,1,translation: 1 ,1
+amm,1,rotation: 14 ,2
+amm,1,translation: 1 ,1
+amm,1,rotation: 16 ,2
+amm,1,translation: 1 ,1
+amm,1,rotation: 21 ,5
+amm,1,translation: 1 ,1
+amm,1,rotation: 16 ,1
+amm,1,translation: 1 ,1
+amm,1,rotation: 14 ,3
+amm,1,translation: 1 ,1
+amm,2,rotation: 23 ,1
+amm,2,translation: 1 ,1
+amm,2,rotation: 23 ,1
+amm,2,translation: 1 ,1
+amm,2,rotation: 13 ,2
+amm,2,translation: 1 ,1
+amm,2,rotation: 10 ,3
+amm,2,translation: 1 ,1
+amm,2,rotation: 17 ,2
+amm,2,translation: 1 ,1
+amm,2,rotation: 17 ,2
+amm,2,translation: 1 ,1
+amm,2,rotation: 17 ,5
+amm,2,translation: 1 ,1
+amm,2,rotation: 16 ,2
+amm,2,translation: 1 ,1
+amm,2,rotation: 11 ,2
+amm,2,translation: 1 ,1
+amm,2,rotation: 17 ,5
+amm,2,translation: 1 ,1
+amm,3,rotation: 17 ,4
+amm,3,translation: 1 ,1
+amm,3,rotation: 16 ,4
+amm,3,translation: 1 ,1
+amm,3,rotation: 15 ,2
+amm,3,translation: 1 ,1
+amm,3,rotation: 21 ,1
+amm,3,translation: 1 ,1
+amm,3,rotation: 9
+amm,3,translation: 1
+amm,3,rotation: 14 ,2
+amm,3,translation: 1 ,1
+amm,3,rotation: 20 ,2
+amm,3,translation: 1 ,1
+amm,3,rotation: 24 ,1
+amm,3,translation: 1 ,1
+amm,3,rotation: 15 ,4
+amm,3,translation: 1 ,1
+amm,3,rotation: 11 ,3
+amm,3,translation: 1 ,1
+amm,4,rotation: 19 ,2
+amm,4,translation: 1 ,1
+amm,4,rotation: 18 ,2
+amm,4,translation: 1 ,1
+amm,4,rotation: 14 ,2
+amm,4,translation: 1 ,1
+amm,4,rotation: 27 ,2
+amm,4,translation: 1 ,1
+amm,4,rotation: 23 ,6
+amm,4,translation: 1 ,1
+amm,4,rotation: 14 ,3
+amm,4,translation: 1 ,1
+amm,4,rotation: 14 ,2
+amm,4,translation: 1 ,1
+amm,4,rotation: 24 ,2
+amm,4,translation: 1 ,1
+amm,4,rotation: 12 ,4
+amm,4,translation: 1 ,1
+amm,4,rotation: 13 ,2
+amm,4,translation: 1 ,1
+amm,5,rotation: 15 ,4
+amm,5,translation: 1 ,1
+amm,5,rotation: 24 ,21 ,11 ,7
+amm,5,translation: 17 ,5 ,1 ,1
+amm,5,rotation: 15 ,12 ,9 ,8 ,8
+amm,5,translation: 19 ,10 ,4 ,2 ,1
+amm,5,rotation: 11 ,3
+amm,5,translation: 1 ,1
+amm,5,rotation: 14 ,3
+amm,5,translation: 1 ,1
+amm,5,rotation: 14 ,3
+amm,5,translation: 1 ,1
+amm,5,rotation: 16 ,4
+amm,5,translation: 1 ,1
+amm,5,rotation: 24 ,2
+amm,5,translation: 1 ,1
+amm,5,rotation: 19 ,2
+amm,5,translation: 1 ,1
+amm,5,rotation: 21 ,2
+amm,5,translation: 1 ,1
+amm,6,rotation: 26 ,2
+amm,6,translation: 1 ,1
+amm,6,rotation: 16 ,2
+amm,6,translation: 1 ,1
+amm,6,rotation: 23 ,5
+amm,6,translation: 1 ,1
+amm,6,rotation: 21 ,13 ,11 ,7
+amm,6,translation: 33 ,10 ,2 ,1
+amm,6,rotation: 18 ,4
+amm,6,translation: 1 ,1
+amm,6,rotation: 20 ,2
+amm,6,translation: 1 ,1
+amm,6,rotation: 23 ,1
+amm,6,translation: 1 ,1
+amm,6,rotation: 19 ,2
+amm,6,translation: 1 ,1
+amm,6,rotation: 13 ,1
+amm,6,translation: 1 ,1
+amm,6,rotation: 16 ,4
+amm,6,translation: 1 ,1
