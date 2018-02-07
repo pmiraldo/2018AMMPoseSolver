@@ -67,7 +67,7 @@ int main( int argc, char** argv )
   int numberCameras = 4;
 
   //Experience parameters
-  int n_experiments = 150;
+  int n_experiments = 300;
   int noise_levels = 10;//4;
   std::ofstream error_file("absolute_pose_error.csv");
   std::ofstream iterations_file("absolute_pose_iterations.csv");

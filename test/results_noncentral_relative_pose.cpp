@@ -62,7 +62,7 @@ int main( int argc, char** argv )
 {
   // initialize random seed
   initializeRandomSeed();
-  int n_experiments = 150;//10;
+  int n_experiments = 300;//10;
    int noise_levels = 10;//4;
 
   //set experiment parameters
