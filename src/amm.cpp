@@ -33,11 +33,10 @@ opengv::transformation_t amm::amm_solver(double & tol,
     //minimize rotation state
     //std::cout << "Iteration: " << iteration << std::endl;
     double f_previous_value = objective_function_container->objective_function_value(state, translation);
-    state = solver_container->rotation_solver(state, translation, tol_solvers, objective_function_container, rotation_iterations);
-
+    translation = solver_container->translation_solver(state, translation, tol_solvers, objective_function_container, step, translation_iterations);
     /*std::cout << "New rotation: "              << std::endl << state       << std::endl;
       std::cout << "The translation: "           << std::endl << translation << std::endl;*/
-    translation = solver_container->translation_solver(state, translation, tol_solvers, objective_function_container, step, translation_iterations);
+    state = solver_container->rotation_solver(state, translation, tol_solvers, objective_function_container, rotation_iterations);
       /*std::cout << "New translation: "           << std::endl << translation << std::endl;
 	std::cout << "End of iteration: " << std::endl;*/
    double f_current_value = objective_function_container->objective_function_value(state, translation);

@@ -7,6 +7,12 @@ void create_random_pose(opengv::rotation_t & rotation, opengv::translation_t & p
 
 
 
-void choose_best_rotation(const opengv::transformations_t &solutions, const opengv::rotation_t & rotation, opengv::transformation_t & transformation_method);
+void choose_best_transformation(const opengv::transformations_t &solutions, const opengv::transformation_t & ref, opengv::transformation_t & transformation_method);
+
+void choose_best_essential_matrix(const opengv::essentials_t & solutions, const opengv::essential_t & ref, opengv::essential_t & essential_matrix);
+
+opengv::essential_t calculate_essential_matrix(const opengv::translation_t & position, const opengv::rotation_t & rotation);
+
+opengv::transformation_t calculate_transformation_from_essential_matrix(const opengv::essential_t & essential_matrix, const opengv::rotation_t &ref_rotation, const opengv::translation_t & ref_translation);
 
 #endif

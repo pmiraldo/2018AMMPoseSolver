@@ -13,13 +13,13 @@ StatisticalInfoContainer::StatisticalInfoContainer(double noise_level_, std::str
 
 StatisticalInfoContainer::~StatisticalInfoContainer(){}
 
-void StatisticalInfoContainer::printInfo(std::ostream & error_information, std::ostream & iteration_information, const bool & is_amm){
+void StatisticalInfoContainer::printInfo(std::ostream & error_information, std::ostream & iteration_information, const bool &is_amm){
 
   if (label_error_statistical_info_written == false){
     error_information << label_error_statistical_info << std::endl;
     label_error_statistical_info_written = true;
   }
- 
+  
   error_information << method_name       << ",";
   error_information << noise_level       << ",";
   error_information << rotation_error    << ",";
@@ -54,7 +54,7 @@ void StatisticalInfoContainer::printInfo(std::ostream & error_information, std::
   }
 }
 
-std::string StatisticalInfoContainer::label_error_statistical_info = "method name, noise level, rotation error, translation error, execution time";
+std::string StatisticalInfoContainer::label_error_statistical_info = "method_name,noise_level,rotation_error,translation_error,execution_time";
 bool StatisticalInfoContainer::label_error_statistical_info_written = false;
-std::string StatisticalInfoContainer::label_iterations_statistical_info = "method name, noise level, iteration kind";
+std::string StatisticalInfoContainer::label_iterations_statistical_info = "method_name,noise_level,iteration_kind";
 bool StatisticalInfoContainer::label_iterations_statistical_info_written = false;

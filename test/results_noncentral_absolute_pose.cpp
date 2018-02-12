@@ -28,6 +28,7 @@
  * SUCH DAMAGE.                                                               *
  ******************************************************************************/
 
+#include <cmath>
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -41,12 +42,12 @@
 #include <opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp>
 #include <sstream>
 #include <fstream>
+#include <random>
 
 #include "random_generators.hpp"
 #include "experiment_helpers.hpp"
 #include "time_measurement.hpp"
 
-#include <opengv/statistic/AggregateStatisticalInfo.hpp>
 #include <opengv/statistic/StatisticalInfoContainer.hpp>
 #include <opengv/statistic/iterations_info.hpp>
 
@@ -67,7 +68,7 @@ int main( int argc, char** argv )
   int numberCameras = 4;
 
   //Experience parameters
-  int n_experiments = 300;
+  int n_experiments = 500;
   int noise_levels = 10;//4;
   std::ofstream error_file("absolute_pose_error.csv");
   std::ofstream iterations_file("absolute_pose_iterations.csv");
@@ -76,8 +77,6 @@ int main( int argc, char** argv )
 
     double noise = 0.0 + 1 * index;
     int index_stat = 0;
-    int total_realizations = 0;
-    
     while(index_stat < n_experiments){
       
       //create a random viewpoint pose
@@ -110,6 +109,7 @@ int main( int argc, char** argv )
       struct timeval toc;
       size_t iterations = 10;
 
+      std::vector<iterations_info> iterations_list;
       //run the experiments
       std::cout << "running Kneip's GP3P (using first three correspondences/";
       std::cout << std::endl;
@@ -121,8 +121,8 @@ int main( int argc, char** argv )
       gettimeofday( &toc, 0 );
       double gp3p_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
       transformation_t gp3p_transformation;
-      choose_best_rotation(gp3p_transformations, rotation, gp3p_transformation);
-      
+      choose_best_transformation(gp3p_transformations, gt_transformation, gp3p_transformation);
+      StatisticalInfoContainer trial_statistical_info_gp3p(noise, "gp3p", gp3p_transformation, gt_transformation, gp3p_time, iterations_list);
 
       std::cout << "running gpnp over all correspondences" << std::endl;
       transformation_t gpnp_transformation;
@@ -131,8 +131,9 @@ int main( int argc, char** argv )
 	gpnp_transformation = absolute_pose::gpnp(adapter);
       }
       gettimeofday( &toc, 0 );
-      double gpnp_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-
+      double gpnp_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;    
+      StatisticalInfoContainer trial_statistical_info_gpnp(noise, "gpnp", gpnp_transformation, gt_transformation, gpnp_time, iterations_list);
+      
       std::cout << "running upnp over all correspondences" << std::endl;
       transformations_t upnp_transformations;
       gettimeofday( &tic, 0 );
@@ -142,8 +143,8 @@ int main( int argc, char** argv )
       gettimeofday( &toc, 0);
       double upnp_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
       transformation_t upnp_transformation;
-      choose_best_rotation(upnp_transformations, rotation, upnp_transformation);
-      
+      choose_best_transformation(upnp_transformations, gt_transformation, upnp_transformation);
+      StatisticalInfoContainer trial_statistical_info_upnp(noise, "upnp", upnp_transformation, gt_transformation, upnp_time, iterations_list);
       std::cout << "setting perturbed pose and ";
       std::cout << "performing nonlinear optimization" << std::endl;
       //add a small perturbation to the rotation
@@ -159,72 +160,71 @@ int main( int argc, char** argv )
 	}
       gettimeofday( &toc, 0 );
       double nonlinear_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-
+      StatisticalInfoContainer trial_statistical_info_nonlin(noise, "nonlin", nonlinear_transformation, gt_transformation, nonlinear_time, iterations_list);
       
       
-      std::vector<iterations_info> iterations_list;
+      
       //Create solver pointer and solver tools
       SolverTools * solver_container = solver_container = new SolverToolsNoncentralRelativePose();
       amm solver_object;
-      rotation_t rotation_gp3p = gp3p_transformation.block<3,3>(0,0);
-      translation_t translation_gp3p = gp3p_transformation.block<3,1>(0,3);
+      std::default_random_engine generator;
+      std::normal_distribution<double> distribution(0.0, 9 * (index + 1));
+
+      double angle = (M_PI / 20 ) * distribution(generator);
+      std::cout << "The angle is: " << angle << std::endl;
+      rotation_t error_rot = Eigen::Matrix3d::Identity(3,3);
+      error_rot(0,0) = std::cos(angle);error_rot(0,1) = -std::sin(angle);
+      error_rot(1,0) = std::sin(angle);error_rot(1,1) = std::cos(angle);
+      std::cout << "Rotation error: " << std::endl << error_rot << std::endl;
+      rotation_t rotation_init = rotation * error_rot;
+      translation_t translation_init = position;
       //AMM GlobalPnPFunctionInfo
       double tol = 1e-6;
       double step = 0.008;
       transformation_t global_pnp;
+      ObjectiveFunctionInfo * info_container_amm_gpnp = new GlobalPnPFunctionInfo(adapter);
       gettimeofday(&tic,0);
       for(int i = 0; i < iterations; ++i){
-	ObjectiveFunctionInfo * info_container = new GlobalPnPFunctionInfo(adapter);
-	global_pnp = solver_object.amm_solver( tol, rotation_gp3p.inverse(), -rotation_gp3p.inverse() * translation_gp3p, info_container, solver_container, step, iterations_list);
-	delete info_container;
+	global_pnp = solver_object.amm_solver( tol, rotation_init.inverse(), -rotation_init.inverse() * translation_init, info_container_amm_gpnp, solver_container, step, iterations_list);
       }
       gettimeofday(&toc,0);
+      delete info_container_amm_gpnp;
       double time_pnp_global = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-
+      StatisticalInfoContainer trial_statistical_info_amm_global_pnp(noise, "amm gpnp", global_pnp, gt_transformation_amm, time_pnp_global, iterations_list);
+      
       //AMM OptimalPnPFunctionInfo
       step = 0.0051;
       transformation_t optimal_upnp;
+      
+      ObjectiveFunctionInfo * info_container_optimal_upnp = new OptimalUPnPFunctionInfo(adapter);
       gettimeofday(&tic, 0);
       for(int i = 0; i < iterations; ++i){
-	ObjectiveFunctionInfo * info_container = new OptimalUPnPFunctionInfo(adapter);
-	optimal_upnp = solver_object.amm_solver( tol, rotation_gp3p.inverse(), -rotation_gp3p.inverse() * translation_gp3p, info_container, solver_container, step, iterations_list);
-	delete info_container;
+	optimal_upnp = solver_object.amm_solver( tol, rotation_init.inverse(), -rotation_init.inverse() * translation_init, info_container_optimal_upnp, solver_container, step, iterations_list);
       }
       gettimeofday(&toc, 0);
+      delete info_container_optimal_upnp;
       double time_optimal_upnp = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-     
-
+      StatisticalInfoContainer trial_statistical_info_amm_optimal_upnp(noise, "amm upnp", optimal_upnp, gt_transformation_amm, time_optimal_upnp, iterations_list);
+      
+      
       //AMM GlobalPnPFunction Infinite norm
       step = 0.45;
       tol = 1e-6;
       transformation_t infinite_norm_gpnp;
+      ObjectiveFunctionInfo * info_container_inf_norm = new GlobalPnPInfiniteNormFunctionInfo(adapter, rotation_init.inverse(), -rotation_init.inverse() * translation_init);
       gettimeofday(&tic, 0);
-     
       for(int i = 0; i < iterations; ++i){
-	ObjectiveFunctionInfo * info_container = new GlobalPnPInfiniteNormFunctionInfo(adapter, rotation_gp3p.inverse(), -rotation_gp3p.inverse() * translation_gp3p);
-	infinite_norm_gpnp = solver_object.amm_solver( tol, rotation_gp3p.inverse(), -rotation_gp3p.inverse() * translation_gp3p, info_container, solver_container, step, iterations_list);
-	delete info_container;
+	infinite_norm_gpnp = solver_object.amm_solver( tol, rotation_init.inverse(), -rotation_init.inverse() * translation_init, info_container_inf_norm, solver_container, step, iterations_list);
       }
       gettimeofday(&toc, 0);
+      delete info_container_inf_norm;
       double time_infinite_norm_gpnp = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-
+      StatisticalInfoContainer trial_statistical_info_amm_infinite_norm_gpnp(noise, "amm infinite norm", infinite_norm_gpnp, gt_transformation_amm, time_infinite_norm_gpnp, iterations_list);
       
       //The solver is no longer needed. So it can be erased
       delete solver_container;
       iterations_list.clear();
-
-
       index_stat++;
-      
-      StatisticalInfoContainer trial_statistical_info_gp3p(noise, "gp3p", gp3p_transformation, gt_transformation, gp3p_time, iterations_list);
-      StatisticalInfoContainer trial_statistical_info_upnp(noise, "upnp", upnp_transformation, gt_transformation, upnp_time, iterations_list);
-      StatisticalInfoContainer trial_statistical_info_gpnp(noise, "gpnp", gpnp_transformation, gt_transformation, gpnp_time, iterations_list);
-      StatisticalInfoContainer trial_statistical_info_nonlin(noise, "nonlin", nonlinear_transformation, gt_transformation, nonlinear_time, iterations_list);
-      StatisticalInfoContainer trial_statistical_info_amm_global_pnp(noise, "amm gpnp", global_pnp, gt_transformation_amm, time_pnp_global, iterations_list);
-      StatisticalInfoContainer trial_statistical_info_amm_optimal_upnp(noise, "amm upnp", optimal_upnp, gt_transformation_amm, time_optimal_upnp, iterations_list);
-      StatisticalInfoContainer trial_statistical_info_amm_infinite_norm_gpnp(noise, "amm infinite norm", infinite_norm_gpnp, gt_transformation_amm, time_infinite_norm_gpnp, iterations_list);
-     
-     
       statistical_error_methods[0].push_back(trial_statistical_info_gp3p);
       statistical_error_methods[1].push_back(trial_statistical_info_upnp);
       statistical_error_methods[2].push_back(trial_statistical_info_gpnp);

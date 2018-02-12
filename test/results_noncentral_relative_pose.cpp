@@ -47,7 +47,6 @@
 #include <opengv/optimization_tools/objective_function_tools/SquaredFunctionInfo.hpp>
 #include <opengv/optimization_tools/objective_function_tools/SquaredFunctionNoIterationsInfo.hpp>
 
-#include <opengv/statistic/AggregateStatisticalInfo.hpp>
 #include <opengv/statistic/StatisticalInfoContainer.hpp>
 #include <opengv/statistic/iterations_info.hpp>
 #include <opengv/amm.hpp>
@@ -62,8 +61,8 @@ int main( int argc, char** argv )
 {
   // initialize random seed
   initializeRandomSeed();
-  int n_experiments = 300;//10;
-   int noise_levels = 10;//4;
+  int n_experiments = 500;//10;
+  int noise_levels = 10;//4;
 
   //set experiment parameters
   double noise = 0.0;
@@ -209,18 +208,11 @@ int main( int argc, char** argv )
     }
     total_realizations++;
   }
-  /*for(int i = 0; i < statistical_error_info_ge.size(); ++i){
-    statistical_error_info_ge[i].printInfo(error_file, iterations_file, false);
+  for(int i = 0; i < statistical_error_methods.size(); ++i){
+    for(int j = 0; j < statistical_error_methods[i].size(); ++j){
+      statistical_error_methods[i][j].printInfo(error_file, iterations_file, false);
+    }
   }
-  for(int i = 0; i < statistical_error_info_17pt.size(); ++i){
-    statistical_error_info_17pt[i].printInfo(error_file, iterations_file, false);
-  }
-  for(int i = 0; i < statistical_error_info_nonlin.size(); ++i){
-    statistical_error_info_nonlin[i].printInfo(error_file, iterations_file, false);
-  }
-  for(int i = 0; i < statistical_error_info_amm.size(); ++i){
-    statistical_error_info_amm[i].printInfo(error_file, iterations_file, true);
-    }*/
   iterations_file.close();
   error_file.close();
 }

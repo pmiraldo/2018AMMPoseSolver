@@ -140,6 +140,7 @@ set( OPENGV_SOURCE_FILES
   src/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.cpp
   src/optimization_tools/objective_function_tools/GlobalPnPInfiniteNormFunctionInfo.cpp
   src/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.cpp
+  src/optimization_tools/objective_function_tools/SquaredFunctionCentralInfo.cpp
   
   #amm
   src/amm.cpp
@@ -207,6 +208,8 @@ set( OPENGV_HEADER_FILES
   include/opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/GlobalPnPInfiniteNormFunctionInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/SquaredFunctionCentralInfo.hpp
+
   #amm
   include/opengv/amm.hpp
 
@@ -269,6 +272,18 @@ IF (BUILD_TESTS)
   add_test(NAME test_relative_pose
     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     COMMAND test_relative_pose)
+
+  add_executable( results_central_relative_pose test/results_central_relative_pose.cpp )
+  target_link_libraries( results_central_relative_pose opengv random_generators )
+  add_test(NAME results_central_relative_pose
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMAND results_central_relative_pose)
+
+  add_executable( results_central_absolute_pose test/results_central_absolute_pose.cpp )
+  target_link_libraries( results_central_absolute_pose opengv random_generators )
+  add_test(NAME results_central_absolute_pose
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMAND results_central_absolute_pose)
 
   add_executable( test_relative_pose_rotationOnly test/test_relative_pose_rotationOnly.cpp )
   target_link_libraries( test_relative_pose_rotationOnly opengv random_generators )
@@ -379,6 +394,8 @@ IF (BUILD_TESTS)
     test_noncentral_relative_pose
     results_noncentral_relative_pose
     results_noncentral_absolute_pose
+    results_central_relative_pose
+    results_central_absolute_pose
     test_noncentral_relative_pose_sac
     test_multi_noncentral_relative_pose_sac
     test_eigensolver_sac
