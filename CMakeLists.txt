@@ -273,17 +273,17 @@ IF (BUILD_TESTS)
     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     COMMAND test_relative_pose)
 
-  add_executable( results_central_relative_pose test/results_central_relative_pose.cpp )
-  target_link_libraries( results_central_relative_pose opengv random_generators )
-  add_test(NAME results_central_relative_pose
-    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMAND results_central_relative_pose)
+  #add_executable( results_central_relative_pose test/results_central_relative_pose.cpp )
+  #target_link_libraries( results_central_relative_pose opengv random_generators )
+  #add_test(NAME results_central_relative_pose
+  #  WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+  #  COMMAND results_central_relative_pose)
 
-  add_executable( results_central_absolute_pose test/results_central_absolute_pose.cpp )
-  target_link_libraries( results_central_absolute_pose opengv random_generators )
-  add_test(NAME results_central_absolute_pose
-    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMAND results_central_absolute_pose)
+  #add_executable( results_central_absolute_pose test/results_central_absolute_pose.cpp )
+  #target_link_libraries( results_central_absolute_pose opengv random_generators )
+  #add_test(NAME results_central_absolute_pose
+  #  WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+  #  COMMAND results_central_absolute_pose)
 
   add_executable( test_relative_pose_rotationOnly test/test_relative_pose_rotationOnly.cpp )
   target_link_libraries( test_relative_pose_rotationOnly opengv random_generators )
@@ -309,11 +309,11 @@ IF (BUILD_TESTS)
     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     COMMAND test_noncentral_relative_pose)
 
-  add_executable( results_noncentral_relative_pose test/results_noncentral_relative_pose.cpp )
-  target_link_libraries( results_noncentral_relative_pose opengv random_generators )
-  add_test(NAME results_noncentral_relative_pose
-    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMAND results_noncentral_relative_pose)
+  #add_executable( results_noncentral_relative_pose test/results_noncentral_relative_pose.cpp )
+  #target_link_libraries( results_noncentral_relative_pose opengv random_generators )
+  #add_test(NAME results_noncentral_relative_pose
+  #  WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+  #  COMMAND results_noncentral_relative_pose)
 
    add_executable( results_noncentral_absolute_pose test/results_noncentral_absolute_pose.cpp )
    target_link_libraries( results_noncentral_absolute_pose opengv random_generators )
@@ -392,10 +392,10 @@ IF (BUILD_TESTS)
     test_relative_pose_rotationOnly_sac
     test_relative_pose_sac
     test_noncentral_relative_pose
-    results_noncentral_relative_pose
+    #results_noncentral_relative_pose
     results_noncentral_absolute_pose
-    results_central_relative_pose
-    results_central_absolute_pose
+    #results_central_relative_pose
+    #results_central_absolute_pose
     test_noncentral_relative_pose_sac
     test_multi_noncentral_relative_pose_sac
     test_eigensolver_sac

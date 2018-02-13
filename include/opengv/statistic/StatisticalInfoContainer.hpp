@@ -10,25 +10,19 @@
 
 class StatisticalInfoContainer{
  public:
-  StatisticalInfoContainer(double noise_level_, std::string method_name_, const opengv::transformation_t & transformation_method, const opengv::transformation_t & transformation_reference, double time_to_run_, std::vector<iterations_info> & information_amm_iterations_);
+  StatisticalInfoContainer(int n_trials_, int noise_levels_, int n_iterations_, std::vector<std::string> methods_list_);
+
   ~StatisticalInfoContainer();
+
+  void append_info(int method_index, int index_n, double noise, const opengv::transformation_t & method_result, const opengv::transformation_t & gt_transformation, const double & execution_time, std::vector<iterations_info> number_of_interations);
   
-  void printInfo(std::ostream & error_information, std::ostream & iteration_information, const bool & is_amm);
+  void print_info(std::string filename);
 
  private:
-  std::string method_name;
-  double noise_level;
-  double rotation_error;
-  double translation_error;
-  double time_to_run;
-  std::vector<iterations_info> information_amm_iterations;
-
-  //static members to control writing the label
-  static std::string label_error_statistical_info;
-  static bool label_error_statistical_info_written;
-  
-  static std::string label_iterations_statistical_info;
-  static bool label_iterations_statistical_info_written;
+  std::vector<std::string> methods_list;
+  Eigen::MatrixXd trial_info_table;
+  int block_size;
+  int n_iterations;
 };
 
 #endif

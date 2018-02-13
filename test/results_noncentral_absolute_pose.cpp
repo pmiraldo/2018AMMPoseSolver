@@ -68,17 +68,23 @@ int main( int argc, char** argv )
   int numberCameras = 4;
 
   //Experience parameters
-  int n_experiments = 500;
-  int noise_levels = 10;//4;
-  std::ofstream error_file("absolute_pose_error.csv");
-  std::ofstream iterations_file("absolute_pose_iterations.csv");
-  std::vector<std::vector<StatisticalInfoContainer> > statistical_error_methods(7);
+  int n_experiments = 2;//500;
+  int noise_levels = 3;//4;
+  std::vector<std::string> methods_list;
+  methods_list.push_back("gp3p");
+  methods_list.push_back("gpnp");
+  methods_list.push_back("upnp");
+  methods_list.push_back("non linear");
+  methods_list.push_back("amm gpnp");
+  methods_list.push_back("amm upnp");
+  methods_list.push_back("amm inf norm");
+  int position_table_stat = 0;
+  StatisticalInfoContainer statistical_info(n_experiments, noise_levels, 2, methods_list);
   for(int index = 0; index < noise_levels; index++){
 
     double noise = 0.0 + 1 * index;
     int index_stat = 0;
     while(index_stat < n_experiments){
-      
       //create a random viewpoint pose
       translation_t position = generateRandomTranslation(2.0);
       rotation_t rotation = generateRandomRotation(0.5);
@@ -109,6 +115,7 @@ int main( int argc, char** argv )
       struct timeval toc;
       size_t iterations = 10;
 
+      std::cout << "THE OFFSET IS: " << position_table_stat << std::endl;
       std::vector<iterations_info> iterations_list;
       //run the experiments
       std::cout << "running Kneip's GP3P (using first three correspondences/";
@@ -122,8 +129,8 @@ int main( int argc, char** argv )
       double gp3p_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
       transformation_t gp3p_transformation;
       choose_best_transformation(gp3p_transformations, gt_transformation, gp3p_transformation);
-      StatisticalInfoContainer trial_statistical_info_gp3p(noise, "gp3p", gp3p_transformation, gt_transformation, gp3p_time, iterations_list);
-
+      statistical_info.append_info(0, position_table_stat, noise, gp3p_transformation, gt_transformation, gp3p_time, iterations_list);
+      
       std::cout << "running gpnp over all correspondences" << std::endl;
       transformation_t gpnp_transformation;
       gettimeofday( &tic, 0 );
@@ -132,7 +139,7 @@ int main( int argc, char** argv )
       }
       gettimeofday( &toc, 0 );
       double gpnp_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;    
-      StatisticalInfoContainer trial_statistical_info_gpnp(noise, "gpnp", gpnp_transformation, gt_transformation, gpnp_time, iterations_list);
+      statistical_info.append_info(1, position_table_stat, noise, gpnp_transformation, gt_transformation, gpnp_time, iterations_list);
       
       std::cout << "running upnp over all correspondences" << std::endl;
       transformations_t upnp_transformations;
@@ -144,7 +151,8 @@ int main( int argc, char** argv )
       double upnp_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
       transformation_t upnp_transformation;
       choose_best_transformation(upnp_transformations, gt_transformation, upnp_transformation);
-      StatisticalInfoContainer trial_statistical_info_upnp(noise, "upnp", upnp_transformation, gt_transformation, upnp_time, iterations_list);
+      statistical_info.append_info(2, position_table_stat, noise, upnp_transformation, gt_transformation, upnp_time, iterations_list);
+      
       std::cout << "setting perturbed pose and ";
       std::cout << "performing nonlinear optimization" << std::endl;
       //add a small perturbation to the rotation
@@ -160,7 +168,7 @@ int main( int argc, char** argv )
 	}
       gettimeofday( &toc, 0 );
       double nonlinear_time = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-      StatisticalInfoContainer trial_statistical_info_nonlin(noise, "nonlin", nonlinear_transformation, gt_transformation, nonlinear_time, iterations_list);
+      statistical_info.append_info(3, position_table_stat, noise, nonlinear_transformation, gt_transformation, nonlinear_time, iterations_list);
       
       
       
@@ -190,8 +198,8 @@ int main( int argc, char** argv )
       gettimeofday(&toc,0);
       delete info_container_amm_gpnp;
       double time_pnp_global = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-      StatisticalInfoContainer trial_statistical_info_amm_global_pnp(noise, "amm gpnp", global_pnp, gt_transformation_amm, time_pnp_global, iterations_list);
-      
+      statistical_info.append_info(4, position_table_stat, noise, global_pnp, gt_transformation, time_pnp_global, iterations_list);
+
       //AMM OptimalPnPFunctionInfo
       step = 0.0051;
       transformation_t optimal_upnp;
@@ -204,8 +212,7 @@ int main( int argc, char** argv )
       gettimeofday(&toc, 0);
       delete info_container_optimal_upnp;
       double time_optimal_upnp = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-      StatisticalInfoContainer trial_statistical_info_amm_optimal_upnp(noise, "amm upnp", optimal_upnp, gt_transformation_amm, time_optimal_upnp, iterations_list);
-      
+      statistical_info.append_info(5, position_table_stat, noise, optimal_upnp, gt_transformation, time_optimal_upnp, iterations_list);
       
       //AMM GlobalPnPFunction Infinite norm
       step = 0.45;
@@ -219,32 +226,44 @@ int main( int argc, char** argv )
       gettimeofday(&toc, 0);
       delete info_container_inf_norm;
       double time_infinite_norm_gpnp = TIMETODOUBLE(timeval_minus(toc,tic)) / iterations;
-      StatisticalInfoContainer trial_statistical_info_amm_infinite_norm_gpnp(noise, "amm infinite norm", infinite_norm_gpnp, gt_transformation_amm, time_infinite_norm_gpnp, iterations_list);
+      statistical_info.append_info(6, position_table_stat, noise, infinite_norm_gpnp, gt_transformation, time_infinite_norm_gpnp, iterations_list);
       
       //The solver is no longer needed. So it can be erased
       delete solver_container;
       iterations_list.clear();
-      index_stat++;
-      statistical_error_methods[0].push_back(trial_statistical_info_gp3p);
-      statistical_error_methods[1].push_back(trial_statistical_info_upnp);
-      statistical_error_methods[2].push_back(trial_statistical_info_gpnp);
-      statistical_error_methods[3].push_back(trial_statistical_info_nonlin);
-      statistical_error_methods[4].push_back(trial_statistical_info_amm_global_pnp);
-      statistical_error_methods[5].push_back(trial_statistical_info_amm_optimal_upnp);
-      statistical_error_methods[6].push_back(trial_statistical_info_amm_infinite_norm_gpnp);
+      std::cout << "Errors: "        << std::endl;
+      std::cout << "gp3p (rot) "         << (gp3p_transformation.block<3,3>(0,0) - gt_transformation.block<3,3>(0,0) ).norm() << std::endl;
+      std::cout << "gpnp (rot) "         << (gpnp_transformation.block<3,3>(0,0) - gt_transformation.block<3,3>(0,0) ).norm() << std::endl;
+      std::cout << "upnp (rot) "         << (upnp_transformation.block<3,3>(0,0) - gt_transformation.block<3,3>(0,0) ).norm() << std::endl;
+      std::cout << "nonlin (rot) "       << (nonlinear_transformation.block<3,3>(0,0) - gt_transformation.block<3,3>(0,0) ).norm() << std::endl;
+      std::cout << "amm gpnp (rot) "     << (global_pnp.block<3,3>(0,0) - gt_transformation.block<3,3>(0,0) ).norm() << std::endl;
+      std::cout << "amm upnp (rot) "     << (optimal_upnp.block<3,3>(0,0) - gt_transformation.block<3,3>(0,0) ).norm() << std::endl;
+      std::cout << "amm inf norm (rot) " << (infinite_norm_gpnp.block<3,3>(0,0) - gt_transformation.block<3,3>(0,0) ).norm() << std::endl;
+
+      std::cout << "Errors: "        << std::endl;
+      std::cout << "gp3p (trans) "         << (gp3p_transformation.block<3,1>(0,3)               - gt_transformation.block<3,1>(0,3) ).norm() << std::endl;
+      std::cout << "gpnp (trans) "         << (gpnp_transformation.block<3,1>(0,3)               - gt_transformation.block<3,1>(0,3) ).norm() << std::endl;
+      std::cout << "upnp (trans) "         << (upnp_transformation.block<3,1>(0,3)               - gt_transformation.block<3,1>(0,3) ).norm() << std::endl;
+      std::cout << "nonlin (trans) "       << (nonlinear_transformation.block<3,1>(0,3)          - gt_transformation.block<3,1>(0,3) ).norm() << std::endl;
+      std::cout << "amm gpnp (trans) "     << (global_pnp.block<3,1>(0,3)                        - gt_transformation.block<3,1>(0,3) ).norm() << std::endl;
+      std::cout << "amm upnp (trans) "     << (optimal_upnp.block<3,1>(0,3)                      - gt_transformation.block<3,1>(0,3) ).norm() << std::endl;
+      std::cout << "amm inf norm (trans) " << (infinite_norm_gpnp.block<3,1>(0,3) - gt_transformation.block<3,1>(0,3) ).norm() << std::endl;
+
+      std::cout << "Time: "       << std::endl;
+      std::cout << "gp3p"         <<  gp3p_time         << std::endl;
+      std::cout << "gpnp"         <<  gpnp_time         << std::endl;
+      std::cout << "upnp"         <<  upnp_time         << std::endl;
+      std::cout << "nonlin"       <<  nonlinear_time    << std::endl;
+      std::cout << "amm gpnp"     <<  time_pnp_global   << std::endl;
+      std::cout << "amm upnp"     <<  time_optimal_upnp << std::endl;
+      std::cout << "amm inf norm" <<  time_infinite_norm_gpnp << std::endl;
       
+      index_stat++;
+      position_table_stat++;
     }
   }
-  bool is_amm = false;
-  for(int i = 0; i < statistical_error_methods.size(); ++i){
-    if(i > 3){
-      is_amm = true;
-    }
-    for(int j = 0; j < statistical_error_methods[i].size(); ++j){
-    statistical_error_methods[i][j].printInfo(error_file, iterations_file, is_amm);
-    }
-  }
-  iterations_file.close();
-  error_file.close();
+  std::cout << "Write in file" << std::endl;
+  std::string filename = "info.txt";
+  statistical_info.print_info(filename);
 }
 
